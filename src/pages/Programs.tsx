@@ -520,9 +520,6 @@ const Programs = () => {
           </div>
           <div className="flex items-center justify-between mb-8">
             <div>
-              <span className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-semibold mb-2">
-                Featured
-              </span>
               <h2 className="font-heading text-3xl font-bold text-foreground">
                 Our Key Programs
               </h2>

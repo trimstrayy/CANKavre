@@ -32,6 +32,19 @@ const Navbar = () => {
   }, [location.pathname, closeSearch]);
 
   useEffect(() => {
+    // Prevent background scrolling while the mobile drawer is open.
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
     if (isSearchVisible) {
       searchInputRef.current?.focus();
     }
@@ -93,62 +106,23 @@ const Navbar = () => {
     return location.pathname.startsWith(path.split("#")[0]);
   };
 
-  const headerClasses = `sticky top-0 z-50 transition-all duration-300 ${isScrolled ? "bg-card/95 backdrop-blur-md shadow-card" : "bg-card"
-    }`;
+  const headerClasses = `sticky top-0 z-50 transition-all duration-300 ${
+    isScrolled ? "bg-card/95 backdrop-blur-md shadow-card" : "bg-card"
+  }`;
 
   return (
     <header className={headerClasses}>
-      {/* Top Bar: left quarter reserved for pill, right side keeps three stripes */}
-      <div className="relative">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col">
-            <div className="flex items-start">
-              {/* Left 25%: space for the green bubble */}
-              <div className="hidden sm:flex w-1/4 item item-leftac ">
-                <div className="flex-1">
-                  <div className="h-2 bg-red-600 w-full" />
-                  <div className="h-2 bg-green-600 w-full" />
-                  <div className="h-2 bg-blue-600 w-full" />
-                </div>
-                <div className="absolute -top-1 left-0">
-                  <div className="inline-block bg-green-600 text-white px-4 py-1 rounded-sm text-sm font-semibold shadow-md">
-                    Let's Build e-Nepal
-                  </div>
-                </div>
-              </div>
-
-              {/* Right 75%: the triple stripe */}
-              <div className="flex-1 relatives">
-                <div className="h-2 bg-red-600 w-full absolute" />
-                <div className="h-2 bg-green-600 w-full absolute top-2" />
-                <div className="h-2 bg-blue-600 w-full absolute top-4" />
-              </div>
-            </div>
-
-            {/* Mobile pill duplication */}
-            <div className="sm:hidden mt-3">
-              <div className="inline-block bg-green-600 text-white px-4 py-1 rounded-full text-sm font-semibold shadow-md">
-                Let's Build e-Nepal
-              </div>
-            </div>
-
-            {/* Contact row below the stripes */}
-            <div className="flex items-center justify-between py-2 text-can-white text-sm">
-              {/* <div className="flex items-center gap-4">
-                <span className="hidden md:block">📧 cankavre@gmail.com</span>
-                <span className="hidden md:block">📞 +977-0000000000</span>
-              </div> */}
-              {/* <div className="flex items-center gap-3">
-                <Link
-                  to="/auth"
-                  className="flex items-center gap-1 hover:text-can-white/80 transition-colors"
-                >
-                  <LogIn className="w-4 h-4" />
-                  <span>Member Login</span>
-                </Link>
-              </div> */}
-            </div>
-          </div>
+      <div className="bg-gradient-to-r from-primary via-secondary to-accent h-1" />
+      <div className="relative overflow-hidden border-b border-border bg-card py-4">
+        <div className="absolute inset-x-0 top-1/2 flex flex-col gap-[0px] -translate-y-1/2">
+          <span className="h-2 w-full bg-red-600" />
+          <span className="h-2 w-full bg-green-600" />
+          <span className="h-2 w-full bg-blue-600" />
+        </div>
+        <div className="relative z-10 container mx-auto px-4 flex justify-start">
+          <span className="inline-flex items-center bg-green-600 text-white px-5 py-1.5 rounded-full text-sm font-semibold shadow-md">
+            Lets Build e-Nepal
+          </span>
         </div>
       </div>
 
@@ -262,49 +236,81 @@ const Navbar = () => {
         <SearchPanel />
       </nav>
 
-      {/* Mobile Navigation */}
-      <div className={`lg:hidden border-b border-border overflow-hidden transition-all duration-300 ${isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
-        }`}>
-        <div className="container mx-auto px-4 py-4 space-y-1 bg-card">
-          {navLinks.map((link) => (
-            link.dropdown ? (
-              <div key={link.name} className="space-y-1">
-                <div className="px-4 py-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                  {link.name}
-                </div>
-                {link.dropdown.map((item) => (
-                  <Link
-                    key={item.name}
-                    to={item.path}
-                    className={`block px-4 py-3 rounded-lg font-medium transition-colors ${isActive(item.path)
-                      ? "bg-primary/10 text-primary"
-                      : "text-foreground hover:bg-muted"
-                      }`}
-                  >
-                    {item.name}
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`block px-4 py-3 rounded-lg font-medium transition-colors ${isActive(link.path)
-                  ? "bg-primary/10 text-primary"
-                  : "text-foreground hover:bg-muted"
-                  }`}
+      {/* Mobile Navigation Drawer */}
+      <div
+        className={`lg:hidden fixed inset-0 z-[60] transition-opacity duration-300 ${
+          isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+        }`}
+      >
+        <div
+          className={`absolute inset-0 bg-foreground/20 backdrop-blur-sm transition-opacity duration-300 ${
+            isOpen ? "opacity-100" : "opacity-0"
+          }`}
+          aria-hidden="true"
+          onClick={() => setIsOpen(false)}
+        />
+        <div className="absolute inset-y-0 right-0 flex h-full w-full justify-end">
+          <div
+            className={`flex h-full w-[50vw] flex-col border-l border-border bg-card px-4 py-6 shadow-2xl transition-transform duration-300 ${
+              isOpen ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
+            <div className="mb-6 flex items-center justify-between">
+              <span className="font-heading text-lg font-semibold text-foreground">Menu</span>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="rounded-full border border-border p-2 text-foreground hover:bg-muted"
+                aria-label="Close menu"
               >
-                {link.name}
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <nav className="flex-1 space-y-2 overflow-y-auto">
+              {navLinks.map((link) => (
+                link.dropdown ? (
+                  <div key={link.name} className="space-y-1">
+                    <div className="px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {link.name}
+                    </div>
+                    {link.dropdown.map((item) => (
+                      <Link
+                        key={item.name}
+                        to={item.path}
+                        onClick={() => setIsOpen(false)}
+                        className={`block rounded-lg px-3 py-3 font-medium transition-colors ${
+                          isActive(item.path)
+                            ? "bg-primary/10 text-primary"
+                            : "text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        {item.name}
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    onClick={() => setIsOpen(false)}
+                    className={`block rounded-lg px-3 py-3 font-medium transition-colors ${
+                      isActive(link.path)
+                        ? "bg-primary/10 text-primary"
+                        : "text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {link.name}
+                  </Link>
+                )
+              ))}
+            </nav>
+            <div className="mt-6 border-t border-border pt-4">
+              <Link to="/auth" className="block" onClick={() => setIsOpen(false)}>
+                <Button className="w-full bg-primary hover:bg-primary/90">
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Member Login
+                </Button>
               </Link>
-            )
-          ))}
-          <div className="pt-4 border-t border-border">
-            <Link to="/auth" className="block">
-              <Button className="w-full bg-primary hover:bg-primary/90">
-                <LogIn className="w-4 h-4 mr-2" />
-                Member Login
-              </Button>
-            </Link>
+            </div>
           </div>
         </div>
       </div>

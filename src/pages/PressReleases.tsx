@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import EditButton from "@/components/EditButton";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -129,6 +129,7 @@ const PressReleases = () => {
   const [pressSettings, setPressSettings] = useState(initialPressSettings);
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(filterConfig.defaultCategory);
 
   const [heroDialogOpen, setHeroDialogOpen] = useState(false);
@@ -223,15 +224,30 @@ const PressReleases = () => {
   );
 
   const filteredReleases = useMemo(() => {
-    const query = searchQuery.toLowerCase();
+    const query = searchQuery.trim().toLowerCase();
+    const hasQuery = query.length > 0;
     return pressItems.filter((release) => {
       const matchesSearch =
-        release.title.toLowerCase().includes(query) || release.excerpt.toLowerCase().includes(query);
+        !hasQuery ||
+        release.title.toLowerCase().includes(query) ||
+        release.excerpt.toLowerCase().includes(query);
       const matchesCategory =
         selectedCategory === filterConfig.allLabel || release.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
   }, [pressItems, searchQuery, selectedCategory, filterConfig.allLabel]);
+
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const trimmed = searchInput.trim();
+    setSearchInput(trimmed);
+    setSearchQuery(trimmed);
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput("");
+    setSearchQuery("");
+  };
 
   const openHeroDialog = () => {
     setHeroDraft({ ...heroContent });
@@ -330,15 +346,33 @@ const PressReleases = () => {
             <EditButton label="Edit Filters" onClick={openFiltersDialog} />
           </div>
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="relative w-full md:w-96">
-              <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder={filterConfig.searchPlaceholder}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+            <form onSubmit={handleSearchSubmit} className="flex w-full md:w-auto gap-2">
+              <div className="relative w-full md:w-80">
+                <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder={filterConfig.searchPlaceholder}
+                  value={searchInput}
+                  onChange={(event) => {
+                    setSearchInput(event.target.value);
+                    setSearchQuery(event.target.value);
+                  }}
+                  className="pl-10"
+                  aria-label="Search press releases"
+                />
+              </div>
+              <Button type="submit" className="shrink-0">
+                Search
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="shrink-0"
+                onClick={handleClearSearch}
+                disabled={!searchQuery && !searchInput}
+              >
+                Clear
+              </Button>
+            </form>
             <div className="flex flex-wrap gap-2">
               {categoryOptions.map((category) => (
                 <Button

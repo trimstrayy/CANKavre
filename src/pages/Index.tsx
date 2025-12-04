@@ -152,11 +152,11 @@ const Index = () => {
               <CarouselItem key={index}>
                 <div className="relative h-[500px] md:h-[600px] overflow-hidden">
                   {/* Top-left small banner */}
-                  <div className="absolute top-6 left-6 z-20">
+                  {/* <div className="absolute top-6 left-6 z-20">
                     <div className="inline-block bg-green-600 text-white px-4 py-1 rounded-full text-sm font-semibold shadow-md">
                       Let's Build e-Nepal
                     </div>
-                  </div>
+                  </div> */}
                   <img
                     src={slide.image}
                     alt={slide.title}
@@ -203,7 +203,7 @@ const Index = () => {
             <span className="block h-2 w-full bg-green-600" />
             <span className="block h-2 w-full bg-blue-600" />
           </div>
-          <div className="absolute -top-0 right-4 sm:right-8">
+          <div className="absolute -top-0 right-4 sm:right-10">
             <div className="inline-block rounded-full bg-green-600 px-4 py-1 text-xs font-semibold text-white shadow-md sm:text-sm">
               Together We Can
             </div>
