@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import EditButton from "@/components/EditButton";
 
 const Auth = () => {
   const { toast } = useToast();
@@ -84,6 +85,9 @@ const Auth = () => {
             
             {/* Left Side - Info */}
             <div className="lg:sticky lg:top-8 animate-fade-in-up">
+              <div className="mb-4 flex justify-end">
+                <EditButton label="Edit Portal Overview" />
+              </div>
               <div className="bg-gradient-to-br from-primary via-secondary to-accent rounded-2xl p-8 text-can-white mb-6">
                 <div className="w-20 h-20 bg-can-white/20 rounded-2xl flex items-center justify-center mb-6">
                   <Shield className="w-10 h-10" />
@@ -118,6 +122,9 @@ const Auth = () => {
 
               {/* Registration CTA */}
               <Card className="border-2 border-dashed border-primary/30 bg-primary/5">
+                <div className="mb-4 flex justify-end">
+                  <EditButton label="Edit Registration CTA" />
+                </div>
                 <CardContent className="p-6">
                   <h3 className="font-heading font-bold text-foreground mb-2">Not a Member Yet?</h3>
                   <p className="text-muted-foreground text-sm mb-4">
@@ -141,6 +148,12 @@ const Auth = () => {
 
             {/* Right Side - Forms */}
             <div className="animate-fade-in-up delay-100">
+              <div className="mb-4 flex justify-end">
+                <EditButton label="Edit Access Forms" />
+              </div>
+              <div className="mb-4 rounded-lg border border-dashed border-secondary/40 bg-secondary/5 p-4 text-sm text-muted-foreground">
+                All site sections now include edit tools without requiring a login. Use the edit buttons on each page to update content directly.
+              </div>
               <Card className="shadow-elevated border-0">
                 <CardHeader className="text-center pb-2">
                   <CardTitle className="font-heading text-2xl">

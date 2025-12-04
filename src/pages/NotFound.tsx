@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { Home, ArrowLeft, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import EditButton from "@/components/EditButton";
 
 const NotFound = () => {
   const location = useLocation();
@@ -11,7 +12,10 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+    <div className="relative min-h-[80vh] flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+      <div className="absolute top-8 right-8 hidden md:block">
+        <EditButton label="Edit 404 Page" />
+      </div>
       <div className="text-center px-4 animate-fade-in-up">
         {/* 404 Number */}
         <div className="relative mb-8">

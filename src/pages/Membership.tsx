@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import EditButton from "@/components/EditButton";
 
 const Membership = () => {
   const { toast } = useToast();
@@ -26,6 +27,9 @@ const Membership = () => {
       {/* Hero */}
       <section className="py-16 md:py-24 bg-gradient-to-br from-accent/5 via-background to-secondary/5">
         <div className="container mx-auto px-4">
+          <div className="mb-6 flex justify-end">
+            <EditButton label="Edit Membership Hero" />
+          </div>
           <div className="max-w-3xl mx-auto text-center animate-fade-in-up">
             <h1 className="font-heading text-4xl md:text-5xl font-bold text-foreground mb-6">
               <span className="text-accent">Membership</span> Portal
@@ -40,7 +44,13 @@ const Membership = () => {
       {/* Login Section */}
       <section className="py-16 bg-background">
         <div className="container mx-auto px-4">
+          <div className="mb-6 flex justify-end">
+            <EditButton label="Edit Membership Access" />
+          </div>
           <div className="max-w-md mx-auto">
+            <div className="mb-6 rounded-lg border border-dashed border-accent/40 bg-accent/5 p-4 text-sm text-muted-foreground text-center">
+              Site content editing is open to everyone. Use the edit buttons shown on each section to make quick changes without logging in.
+            </div>
             <Card className="shadow-card animate-fade-in-up">
               <CardHeader className="text-center">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary via-secondary to-accent p-0.5">

@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import EditButton from "@/components/EditButton";
 
 interface PendingItem {
   id: number;
@@ -76,6 +77,9 @@ const Admin = () => {
       {/* Hero */}
       <section className="py-12 md:py-16 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
         <div className="container mx-auto px-4">
+          <div className="mb-6 flex justify-end">
+            <EditButton label="Edit Admin Hero" />
+          </div>
           <div className="flex items-center gap-4 mb-6 animate-fade-in-up">
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary via-secondary to-accent p-0.5">
               <div className="w-full h-full rounded-xl bg-background flex items-center justify-center">
@@ -123,6 +127,9 @@ const Admin = () => {
       {/* Admin Content */}
       <section className="py-12 bg-muted">
         <div className="container mx-auto px-4">
+          <div className="mb-6 flex justify-end">
+            <EditButton label="Edit Admin Dashboard" />
+          </div>
           <Tabs defaultValue="approvals" className="w-full">
             <TabsList className="w-full max-w-xl mb-8 grid grid-cols-3 h-auto bg-card shadow-card">
               <TabsTrigger value="approvals" className="py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
@@ -138,6 +145,9 @@ const Admin = () => {
 
             {/* Pending Approvals */}
             <TabsContent value="approvals" className="animate-fade-in">
+              <div className="mb-4 flex justify-end">
+                <EditButton label="Edit Pending Approvals" />
+              </div>
               <h3 className="font-heading text-xl font-semibold text-foreground mb-4">
                 Pending Approvals from Subcommittees
               </h3>
@@ -193,6 +203,9 @@ const Admin = () => {
 
             {/* Manage Content */}
             <TabsContent value="manage" className="animate-fade-in">
+              <div className="mb-4 flex justify-end">
+                <EditButton label="Edit Content Management" />
+              </div>
               <h3 className="font-heading text-xl font-semibold text-foreground mb-4">
                 Content Management
               </h3>
@@ -222,6 +235,9 @@ const Admin = () => {
 
             {/* Settings */}
             <TabsContent value="settings" className="animate-fade-in">
+              <div className="mb-4 flex justify-end">
+                <EditButton label="Edit Admin Settings" />
+              </div>
               <div className="max-w-2xl">
                 <h3 className="font-heading text-xl font-semibold text-foreground mb-4">
                   Admin Settings

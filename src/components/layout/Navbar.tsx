@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, ChevronDown, LogIn, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,11 +8,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useSearch } from "@/contexts/SearchContext";
+import SearchPanel from "@/components/SearchPanel";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
+  const { isVisible: isSearchVisible, query, openSearch, closeSearch, performSearch } = useSearch();
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -24,7 +28,39 @@ const Navbar = () => {
 
   useEffect(() => {
     setIsOpen(false);
-  }, [location.pathname]);
+    closeSearch();
+  }, [location.pathname, closeSearch]);
+
+  useEffect(() => {
+    if (isSearchVisible) {
+      searchInputRef.current?.focus();
+    }
+  }, [isSearchVisible]);
+
+  useEffect(() => {
+    if (!isSearchVisible) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeSearch();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isSearchVisible, closeSearch]);
+
+  const handleSearchToggle = () => {
+    if (isSearchVisible) {
+      closeSearch();
+    } else {
+      openSearch();
+    }
+  };
+
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    openSearch();
+    performSearch(query);
+  };
 
   const navLinks = [
     { name: "Home", path: "/" },
@@ -48,7 +84,7 @@ const Navbar = () => {
         { name: "Events", path: "/events" },
       ]
     },
-    { name: "Gallery", path: "/events#gallery" },
+    { name: "Events & Gallery", path: "/events#gallery" },
     { name: "Downloads", path: "/downloads" },
   ];
 
@@ -116,7 +152,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      <nav className="border-b border-border">
+      <nav className="relative border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
@@ -175,9 +211,36 @@ const Navbar = () => {
 
             {/* Right Actions */}
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" className="hidden md:flex">
-                <Search className="w-5 h-5" />
-              </Button>
+              <form
+                onSubmit={handleSearchSubmit}
+                className={`group flex items-center overflow-hidden rounded-full border border-border bg-card transition-all duration-300 ease-out ${
+                  isSearchVisible
+                    ? "w-64 pl-3 pr-2 shadow-md shadow-primary/10 md:w-72"
+                    : "w-10 pl-0 pr-0"
+                }`}
+              >
+                <button
+                  type="button"
+                  onClick={handleSearchToggle}
+                  className="flex h-10 w-10 items-center justify-center text-muted-foreground transition-colors group-hover:text-foreground"
+                  aria-label={isSearchVisible ? "Close search" : "Open search"}
+                >
+                  <Search className="h-5 w-5" />
+                </button>
+                <input
+                  ref={searchInputRef}
+                  value={query}
+                  onChange={(event) => {
+                    performSearch(event.target.value);
+                  }}
+                  type="search"
+                  placeholder="Search site content..."
+                  className={`h-10 flex-1 bg-transparent text-sm text-foreground outline-none transition-all duration-300 ease-out ${
+                    isSearchVisible ? "w-full opacity-100" : "w-0 opacity-0"
+                  }`}
+                  aria-hidden={!isSearchVisible}
+                />
+              </form>
               <Link to="/auth" className="hidden md:block">
                 <Button className="bg-primary hover:bg-primary/90">
                   <LogIn className="w-4 h-4 mr-2" />
@@ -196,6 +259,7 @@ const Navbar = () => {
             </div>
           </div>
         </div>
+        <SearchPanel />
       </nav>
 
       {/* Mobile Navigation */}
