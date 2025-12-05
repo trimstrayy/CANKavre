@@ -111,7 +111,8 @@ const Navbar = () => {
   }`;
 
   return (
-    <header className={headerClasses}>
+    <>
+      <header className={headerClasses}>
       <div className="bg-gradient-to-r from-primary via-secondary to-accent h-1" />
       <div className="relative overflow-hidden border-b border-border bg-card py-4">
         <div className="absolute inset-x-0 top-1/2 flex flex-col gap-[0px] -translate-y-1/2">
@@ -235,25 +236,27 @@ const Navbar = () => {
         </div>
         <SearchPanel />
       </nav>
+      </header>
 
       {/* Mobile Navigation Drawer */}
       <div
         className={`lg:hidden fixed inset-0 z-[60] transition-opacity duration-300 ${
           isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
+        onClick={() => setIsOpen(false)}
       >
         <div
           className={`absolute inset-0 bg-foreground/20 backdrop-blur-sm transition-opacity duration-300 ${
             isOpen ? "opacity-100" : "opacity-0"
           }`}
           aria-hidden="true"
-          onClick={() => setIsOpen(false)}
         />
         <div className="absolute inset-y-0 right-0 flex h-full w-full justify-end">
           <div
-            className={`flex h-full w-[50vw] flex-col border-l border-border bg-card px-4 py-6 shadow-2xl transition-transform duration-300 ${
+            className={`flex h-full w-[50vw] min-w-[280px] max-w-sm flex-col border-l border-border bg-card px-4 py-6 shadow-2xl transition-transform duration-300 ${
               isOpen ? "translate-x-0" : "translate-x-full"
             }`}
+            onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-6 flex items-center justify-between">
               <span className="font-heading text-lg font-semibold text-foreground">Menu</span>
@@ -265,43 +268,49 @@ const Navbar = () => {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <nav className="flex-1 space-y-2 overflow-y-auto">
-              {navLinks.map((link) => (
-                link.dropdown ? (
-                  <div key={link.name} className="space-y-1">
-                    <div className="px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      {link.name}
-                    </div>
-                    {link.dropdown.map((item) => (
+            <nav className="flex-1 overflow-y-auto">
+              <ul className="space-y-2">
+                {navLinks.map((link) => (
+                  <li key={link.name}>
+                    {link.dropdown ? (
+                      <div className="space-y-1">
+                        <p className="px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          {link.name}
+                        </p>
+                        <ul className="space-y-1">
+                          {link.dropdown.map((item) => (
+                            <li key={item.name}>
+                              <Link
+                                to={item.path}
+                                onClick={() => setIsOpen(false)}
+                                className={`block rounded-lg px-3 py-3 font-medium transition-colors ${
+                                  isActive(item.path)
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-foreground hover:bg-muted"
+                                }`}
+                              >
+                                {item.name}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : (
                       <Link
-                        key={item.name}
-                        to={item.path}
+                        to={link.path}
                         onClick={() => setIsOpen(false)}
                         className={`block rounded-lg px-3 py-3 font-medium transition-colors ${
-                          isActive(item.path)
+                          isActive(link.path)
                             ? "bg-primary/10 text-primary"
                             : "text-foreground hover:bg-muted"
                         }`}
                       >
-                        {item.name}
+                        {link.name}
                       </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <Link
-                    key={link.path}
-                    to={link.path}
-                    onClick={() => setIsOpen(false)}
-                    className={`block rounded-lg px-3 py-3 font-medium transition-colors ${
-                      isActive(link.path)
-                        ? "bg-primary/10 text-primary"
-                        : "text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    {link.name}
-                  </Link>
-                )
-              ))}
+                    )}
+                  </li>
+                ))}
+              </ul>
             </nav>
             <div className="mt-6 border-t border-border pt-4">
               <Link to="/auth" className="block" onClick={() => setIsOpen(false)}>
@@ -314,7 +323,7 @@ const Navbar = () => {
           </div>
         </div>
       </div>
-    </header>
+    </>
   );
 };
 
