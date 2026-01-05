@@ -17,9 +17,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Footer = () => {
   const { toast } = useToast();
+  const { t, isNepali } = useLanguage();
   const [email, setEmail] = useState("");
   const [feedback, setFeedback] = useState({
     name: "",
@@ -33,8 +35,8 @@ const Footer = () => {
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     toast({
-      title: "Subscribed!",
-      description: "Thank you for subscribing to our newsletter.",
+      title: isNepali ? "सदस्यता लिइयो!" : "Subscribed!",
+      description: isNepali ? "हाम्रो न्यूजलेटरमा सदस्यता लिनुभएकोमा धन्यवाद।" : "Thank you for subscribing to our newsletter.",
     });
     setEmail("");
   };
@@ -43,18 +45,27 @@ const Footer = () => {
     e.preventDefault();
     if (parseInt(feedback.captcha) !== captchaAnswer.num1 + captchaAnswer.num2) {
       toast({
-        title: "Invalid Captcha",
-        description: "Please solve the math problem correctly.",
+        title: isNepali ? "गलत क्याप्चा" : "Invalid Captcha",
+        description: isNepali ? "कृपया गणित समस्या सही समाधान गर्नुहोस्।" : "Please solve the math problem correctly.",
         variant: "destructive"
       });
       return;
     }
     toast({
-      title: "Feedback Sent!",
-      description: "Thank you for your feedback. We'll get back to you soon.",
+      title: isNepali ? "प्रतिक्रिया पठाइयो!" : "Feedback Sent!",
+      description: isNepali ? "तपाईंको प्रतिक्रियाको लागि धन्यवाद। हामी चाँडै सम्पर्क गर्नेछौं।" : "Thank you for your feedback. We'll get back to you soon.",
     });
     setFeedback({ name: "", email: "", phone: "", message: "", captcha: "" });
   };
+
+  const quickLinks = [
+    { name: t("aboutUs"), path: "/about" },
+    { name: t("programs"), path: "/programs" },
+    { name: t("events"), path: "/events" },
+    { name: t("pressReleases"), path: "/press-releases" },
+    { name: t("downloads"), path: "/downloads" },
+    { name: t("membership"), path: "/membership" },
+  ];
 
   return (
     <footer className="bg-foreground text-background relative">
@@ -69,12 +80,17 @@ const Footer = () => {
                 </div>
               </div>
               <div>
-                <h3 className="font-heading text-lg font-bold">CAN Federation</h3>
-                <p className="text-sm text-background/70">Kavre</p>
+                <h3 className="font-heading text-lg font-bold">
+                  {isNepali ? "क्यान फेडरेसन" : "CAN Federation"}
+                </h3>
+                <p className="text-sm text-background/70">{isNepali ? "काभ्रे" : "Kavre"}</p>
               </div>
             </div>
             <p className="text-sm text-background/80 leading-relaxed">
-              Computer Association of Nepal, Kavre Branch - dedicated to promoting ICT development and digital literacy in Kavrepalanchok district.
+              {isNepali 
+                ? "कम्प्युटर एसोसिएसन अफ नेपाल, काभ्रे शाखा - काभ्रेपलाञ्चोक जिल्लामा आईसीटी विकास र डिजिटल साक्षरता प्रवर्द्धन गर्न समर्पित।"
+                : "Computer Association of Nepal, Kavre Branch - dedicated to promoting ICT development and digital literacy in Kavrepalanchok district."
+              }
             </p>
             <div className="flex gap-3">
               <a 
@@ -98,11 +114,11 @@ const Footer = () => {
 
           {/* Contact Info */}
           <div className="space-y-4">
-            <h3 className="font-heading text-lg font-bold">Contact Us</h3>
+            <h3 className="font-heading text-lg font-bold">{t("contactUs")}</h3>
             <ul className="space-y-3">
               <li className="flex items-start gap-3 text-sm text-background/80">
                 <MapPin className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-                <span>Dhulikhel, Kavrepalanchok, Bagmati Province, Nepal</span>
+                <span>{isNepali ? "धुलिखेल, काभ्रेपलाञ्चोक, बागमती प्रदेश, नेपाल" : "Dhulikhel, Kavrepalanchok, Bagmati Province, Nepal"}</span>
               </li>
               <li className="flex items-center gap-3 text-sm text-background/80">
                 <Phone className="w-5 h-5 text-secondary shrink-0" />
@@ -116,11 +132,11 @@ const Footer = () => {
 
             {/* Newsletter */}
             <div className="pt-4">
-              <h4 className="font-semibold text-sm mb-2">Newsletter</h4>
+              <h4 className="font-semibold text-sm mb-2">{isNepali ? "न्यूजलेटर" : "Newsletter"}</h4>
               <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
                 <Input
                   type="email"
-                  placeholder="Your email"
+                  placeholder={t("yourEmail")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -135,16 +151,9 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div className="space-y-4">
-            <h3 className="font-heading text-lg font-bold">Quick Links</h3>
+            <h3 className="font-heading text-lg font-bold">{t("quickLinksFooter")}</h3>
             <ul className="space-y-2">
-              {[
-                { name: "About Us", path: "/about" },
-                { name: "Programs", path: "/programs" },
-                { name: "Events", path: "/events" },
-                { name: "Press Releases", path: "/press-releases" },
-                { name: "Downloads", path: "/downloads" },
-                { name: "Membership", path: "/membership" },
-              ].map((link) => (
+              {quickLinks.map((link) => (
                 <li key={link.path}>
                   <Link 
                     to={link.path}
@@ -162,13 +171,13 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="font-heading text-lg font-bold flex items-center gap-2">
               <MessageSquare className="w-5 h-5 text-accent" />
-              Feedback
+              {t("sendFeedback")}
             </h3>
             <form onSubmit={handleFeedbackSubmit} className="space-y-3">
               <div className="relative">
                 <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-background/50" />
                 <Input
-                  placeholder="Full Name"
+                  placeholder={t("fullName")}
                   value={feedback.name}
                   onChange={(e) => setFeedback({ ...feedback, name: e.target.value })}
                   required
@@ -179,7 +188,7 @@ const Footer = () => {
                 <AtSign className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-background/50" />
                 <Input
                   type="email"
-                  placeholder="Email Address"
+                  placeholder={t("email")}
                   value={feedback.email}
                   onChange={(e) => setFeedback({ ...feedback, email: e.target.value })}
                   required
@@ -189,14 +198,14 @@ const Footer = () => {
               <div className="relative">
                 <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-background/50" />
                 <Input
-                  placeholder="Contact Number"
+                  placeholder={t("contactNumber")}
                   value={feedback.phone}
                   onChange={(e) => setFeedback({ ...feedback, phone: e.target.value })}
                   className="pl-10 bg-background/10 border-background/20 text-background placeholder:text-background/50 text-sm"
                 />
               </div>
               <Textarea
-                placeholder="Your Message"
+                placeholder={t("message")}
                 value={feedback.message}
                 onChange={(e) => setFeedback({ ...feedback, message: e.target.value })}
                 required
@@ -205,7 +214,7 @@ const Footer = () => {
               />
               <div className="flex items-center gap-2">
                 <span className="text-sm text-background/70">
-                  {captchaAnswer.num1} + {captchaAnswer.num2} = ?
+                  {isNepali ? `${captchaAnswer.num1} + ${captchaAnswer.num2} = ?` : `${captchaAnswer.num1} + ${captchaAnswer.num2} = ?`}
                 </span>
                 <Input
                   type="number"
@@ -218,7 +227,7 @@ const Footer = () => {
               </div>
               <Button type="submit" className="w-full bg-accent hover:bg-accent/90">
                 <CheckCircle className="w-4 h-4 mr-2" />
-                Submit Feedback
+                {t("submitFeedback")}
               </Button>
             </form>
           </div>
@@ -228,15 +237,18 @@ const Footer = () => {
         <div className="mt-12 pt-8 border-t border-background/20">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-background/70 text-center md:text-left">
-              © {new Date().getFullYear()} CAN Federation Kavre. All rights reserved.
+              © {new Date().getFullYear()} {isNepali ? "क्यान फेडरेसन काभ्रे।" : "CAN Federation Kavre."} {t("allRightsReserved")}
               <br />
-              Powered By AAYUSH DAHAL
-              
+              {isNepali ? "पावर्ड बाई आयुष दाहाल" : "Powered By AAYUSH DAHAL"}
             </p>
             <div className="flex items-center gap-4 text-sm text-background/70">
-              <Link to="/about" className="hover:text-secondary transition-colors">Privacy Policy</Link>
+              <Link to="/about" className="hover:text-secondary transition-colors">
+                {isNepali ? "गोपनीयता नीति" : "Privacy Policy"}
+              </Link>
               <span>•</span>
-              <Link to="/about" className="hover:text-secondary transition-colors">Terms of Service</Link>
+              <Link to="/about" className="hover:text-secondary transition-colors">
+                {isNepali ? "सेवाका सर्तहरू" : "Terms of Service"}
+              </Link>
             </div>
           </div>
         </div>
@@ -251,7 +263,7 @@ const Footer = () => {
         </div>
         <div className="absolute bottom-0 z-20 container mx-auto px-4 flex justify-end">
           <span className="inline-flex items-center bg-green-600 text-white px-5 py-1.5 rounded-full text-sm font-semibold shadow-md">
-            Together We Can
+            {isNepali ? "सँगै हामी गर्न सक्छौं" : "Together We Can"}
           </span>
         </div>
       </div>

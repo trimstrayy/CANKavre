@@ -19,10 +19,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import EditButton from "@/components/EditButton";
+import { useLanguage } from "@/contexts/LanguageContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 
-const Auth = () => {
+const AuthContent = () => {
   const { toast } = useToast();
+  const { t, isNepali } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
@@ -37,12 +40,13 @@ const Auth = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate login attempt (no backend)
     setTimeout(() => {
       setIsLoading(false);
       toast({
-        title: "Login Attempt",
-        description: "This is a demo UI-only login. Connect a backend to enable real authentication.",
+        title: isNepali ? "लगइन प्रयास" : "Login Attempt",
+        description: isNepali 
+          ? "यो डेमो UI-मात्र लगइन हो। वास्तविक प्रमाणीकरण सक्षम गर्न ब्याकेन्ड जडान गर्नुहोस्।"
+          : "This is a demo UI-only login. Connect a backend to enable real authentication.",
       });
     }, 1000);
   };
@@ -50,14 +54,20 @@ const Auth = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (credentials.password !== credentials.confirmPassword) {
-      toast({ title: 'Password Mismatch', description: 'Passwords do not match. Please try again.', variant: 'destructive' });
+      toast({ 
+        title: isNepali ? 'पासवर्ड मेल खाएन' : 'Password Mismatch', 
+        description: isNepali ? 'पासवर्डहरू मेल खाँदैनन्। कृपया फेरि प्रयास गर्नुहोस्।' : 'Passwords do not match. Please try again.', 
+        variant: 'destructive' 
+      });
       return;
     }
     setIsLoading(true);
-    // Simulate registration (UI-only)
     setTimeout(() => {
       setIsLoading(false);
-      toast({ title: 'Registration', description: 'Registration simulated. For official membership, please use the CAN Nepal portal.' });
+      toast({ 
+        title: isNepali ? 'दर्ता' : 'Registration', 
+        description: isNepali ? 'दर्ता सिमुलेट गरियो। आधिकारिक सदस्यताको लागि, कृपया क्यान नेपाल पोर्टल प्रयोग गर्नुहोस्।' : 'Registration simulated. For official membership, please use the CAN Nepal portal.' 
+      });
       window.open('https://canfederation.org/member_registration', '_blank');
     }, 1000);
   };
@@ -68,14 +78,15 @@ const Auth = () => {
       <div className="bg-gradient-to-r from-primary via-secondary to-accent h-2" />
       
       {/* Back Navigation */}
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <Link 
           to="/" 
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Home
+          {isNepali ? "गृहपृष्ठमा फर्कनुहोस्" : "Back to Home"}
         </Link>
+        <LanguageSwitcher />
       </div>
 
       {/* Main Content */}
@@ -85,18 +96,18 @@ const Auth = () => {
             
             {/* Left Side - Info */}
             <div className="lg:sticky lg:top-8 animate-fade-in-up">
-              <div className="mb-4 flex justify-end">
-                <EditButton label="Edit Portal Overview" />
-              </div>
               <div className="bg-gradient-to-br from-primary via-secondary to-accent rounded-2xl p-8 text-can-white mb-6">
                 <div className="w-20 h-20 bg-can-white/20 rounded-2xl flex items-center justify-center mb-6">
                   <Shield className="w-10 h-10" />
                 </div>
                 <h1 className="font-heading text-3xl font-bold mb-4">
-                  CAN Kavre<br />Member Portal
+                  {isNepali ? "क्यान काभ्रे" : "CAN Kavre"}<br />{isNepali ? "सदस्य पोर्टल" : "Member Portal"}
                 </h1>
                 <p className="text-can-white/80 mb-6">
-                  Access your member dashboard, manage content, and connect with the ICT community of Kavrepalanchok.
+                  {isNepali 
+                    ? "आफ्नो सदस्य ड्यासबोर्ड पहुँच गर्नुहोस्, सामग्री व्यवस्थापन गर्नुहोस्, र काभ्रेपलाञ्चोकको आईसीटी समुदायसँग जोडिनुहोस्।"
+                    : "Access your member dashboard, manage content, and connect with the ICT community of Kavrepalanchok."
+                  }
                 </p>
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
@@ -104,8 +115,10 @@ const Auth = () => {
                       <Users className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="font-semibold">Committee Access</h3>
-                      <p className="text-sm text-can-white/70">Full admin rights to manage content and approve submissions</p>
+                      <h3 className="font-semibold">{t("committeeMember")}</h3>
+                      <p className="text-sm text-can-white/70">
+                        {isNepali ? "सामग्री व्यवस्थापन र पेशहरू स्वीकृत गर्न पूर्ण एडमिन अधिकार" : "Full admin rights to manage content and approve submissions"}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -113,8 +126,10 @@ const Auth = () => {
                       <Building2 className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="font-semibold">Subcommittee Access</h3>
-                      <p className="text-sm text-can-white/70">Submit content for committee approval and view resources</p>
+                      <h3 className="font-semibold">{t("subcommitteeMember")}</h3>
+                      <p className="text-sm text-can-white/70">
+                        {isNepali ? "समिति स्वीकृतिको लागि सामग्री पेश गर्नुहोस् र स्रोतहरू हेर्नुहोस्" : "Submit content for committee approval and view resources"}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -122,13 +137,15 @@ const Auth = () => {
 
               {/* Registration CTA */}
               <Card className="border-2 border-dashed border-primary/30 bg-primary/5">
-                <div className="mb-4 flex justify-end">
-                  <EditButton label="Edit Registration CTA" />
-                </div>
                 <CardContent className="p-6">
-                  <h3 className="font-heading font-bold text-foreground mb-2">Not a Member Yet?</h3>
+                  <h3 className="font-heading font-bold text-foreground mb-2">
+                    {t("notMember")}
+                  </h3>
                   <p className="text-muted-foreground text-sm mb-4">
-                    Join the Computer Association of Nepal and be part of the largest ICT community in Kavrepalanchok.
+                    {isNepali 
+                      ? "कम्प्युटर एसोसिएसन अफ नेपालमा सामेल हुनुहोस् र काभ्रेपलाञ्चोकको सबैभन्दा ठूलो आईसीटी समुदायको हिस्सा बन्नुहोस्।"
+                      : "Join the Computer Association of Nepal and be part of the largest ICT community in Kavrepalanchok."
+                    }
                   </p>
                   <a 
                     href="https://canfederation.org/member_registration" 
@@ -138,7 +155,7 @@ const Auth = () => {
                   >
                     <Button className="bg-primary hover:bg-primary/90 gap-2">
                       <UserPlus className="w-4 h-4" />
-                      Register at CAN Nepal
+                      {t("registerOnCanNepal")}
                       <ExternalLink className="w-4 h-4" />
                     </Button>
                   </a>
@@ -148,21 +165,16 @@ const Auth = () => {
 
             {/* Right Side - Forms */}
             <div className="animate-fade-in-up delay-100">
-              <div className="mb-4 flex justify-end">
-                <EditButton label="Edit Access Forms" />
-              </div>
-              <div className="mb-4 rounded-lg border border-dashed border-secondary/40 bg-secondary/5 p-4 text-sm text-muted-foreground">
-                All site sections now include edit tools without requiring a login. Use the edit buttons on each page to update content directly.
-              </div>
               <Card className="shadow-elevated border-0">
                 <CardHeader className="text-center pb-2">
                   <CardTitle className="font-heading text-2xl">
-                    {activeTab === "login" ? "Member Login" : "Quick Registration"}
+                    {activeTab === "login" ? t("memberLogin") : (isNepali ? "द्रुत दर्ता" : "Quick Registration")}
                   </CardTitle>
                   <CardDescription>
                     {activeTab === "login" 
-                      ? "Sign in to access your dashboard" 
-                      : "Create an account or register at CAN Nepal"}
+                      ? t("signInToContinue")
+                      : (isNepali ? "खाता सिर्जना गर्नुहोस् वा क्यान नेपालमा दर्ता गर्नुहोस्" : "Create an account or register at CAN Nepal")
+                    }
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -173,14 +185,14 @@ const Auth = () => {
                         className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                       >
                         <LogIn className="w-4 h-4 mr-2" />
-                        Login
+                        {t("login")}
                       </TabsTrigger>
                       <TabsTrigger 
                         value="register"
                         className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
                       >
                         <UserPlus className="w-4 h-4 mr-2" />
-                        Register
+                        {isNepali ? "दर्ता" : "Register"}
                       </TabsTrigger>
                     </TabsList>
 
@@ -202,8 +214,10 @@ const Auth = () => {
                           }`} />
                           <span className={`font-medium block ${
                             loginType === "committee" ? "text-primary" : "text-foreground"
-                          }`}>Committee</span>
-                          <span className="text-xs text-muted-foreground">Full Access</span>
+                          }`}>{isNepali ? "समिति" : "Committee"}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {isNepali ? "पूर्ण पहुँच" : "Full Access"}
+                          </span>
                         </button>
                         <button
                           type="button"
@@ -219,20 +233,22 @@ const Auth = () => {
                           }`} />
                           <span className={`font-medium block ${
                             loginType === "subcommittee" ? "text-secondary" : "text-foreground"
-                          }`}>Subcommittee</span>
-                          <span className="text-xs text-muted-foreground">Limited Access</span>
+                          }`}>{isNepali ? "उपसमिति" : "Subcommittee"}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {isNepali ? "सीमित पहुँच" : "Limited Access"}
+                          </span>
                         </button>
                       </div>
 
                       <form onSubmit={handleLogin} className="space-y-4">
                         <div className="space-y-2">
-                          <Label htmlFor="email">Email Address</Label>
+                          <Label htmlFor="email">{isNepali ? "इमेल ठेगाना" : "Email Address"}</Label>
                           <div className="relative">
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                             <Input
                               id="email"
                               type="email"
-                              placeholder="your@email.com"
+                              placeholder={isNepali ? "तपाईंको@इमेल.com" : "your@email.com"}
                               className="pl-10"
                               value={credentials.email}
                               onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
@@ -241,7 +257,7 @@ const Auth = () => {
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="password">Password</Label>
+                          <Label htmlFor="password">{t("password")}</Label>
                           <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                             <Input
@@ -266,9 +282,11 @@ const Auth = () => {
                         <div className="flex items-center justify-between text-sm">
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" className="rounded border-border" />
-                            <span className="text-muted-foreground">Remember me</span>
+                            <span className="text-muted-foreground">
+                              {isNepali ? "मलाई सम्झनुहोस्" : "Remember me"}
+                            </span>
                           </label>
-                          <a href="#" className="text-primary hover:underline">Forgot password?</a>
+                          <a href="#" className="text-primary hover:underline">{t("forgotPassword")}</a>
                         </div>
 
                         <Button 
@@ -283,12 +301,15 @@ const Auth = () => {
                           {isLoading ? (
                             <span className="flex items-center gap-2">
                               <span className="w-4 h-4 border-2 border-can-white/30 border-t-can-white rounded-full animate-spin" />
-                              Signing in...
+                              {t("loggingIn")}
                             </span>
                           ) : (
                             <>
                               <LogIn className="w-4 h-4 mr-2" />
-                              Sign In as {loginType === "committee" ? "Committee" : "Subcommittee"}
+                              {isNepali 
+                                ? `${loginType === "committee" ? "समिति" : "उपसमिति"}को रूपमा साइन इन गर्नुहोस्`
+                                : `Sign In as ${loginType === "committee" ? "Committee" : "Subcommittee"}`
+                              }
                             </>
                           )}
                         </Button>
@@ -299,30 +320,33 @@ const Auth = () => {
                     <TabsContent value="register" className="space-y-6">
                       <div className="bg-accent/10 border border-accent/30 rounded-lg p-4 text-center">
                         <p className="text-sm text-foreground">
-                          <strong>Note:</strong> Official CAN membership registration is done through the central CAN Nepal portal.
+                          <strong>{isNepali ? "नोट:" : "Note:"}</strong> {isNepali 
+                            ? "आधिकारिक क्यान सदस्यता दर्ता केन्द्रीय क्यान नेपाल पोर्टल मार्फत गरिन्छ।"
+                            : "Official CAN membership registration is done through the central CAN Nepal portal."
+                          }
                         </p>
                       </div>
 
                       <form onSubmit={handleRegister} className="space-y-4">
                         <div className="space-y-2">
-                          <Label htmlFor="fullName">Full Name</Label>
+                          <Label htmlFor="fullName">{t("fullName")}</Label>
                           <Input
                             id="fullName"
                             type="text"
-                            placeholder="Enter your full name"
+                            placeholder={isNepali ? "तपाईंको पूरा नाम प्रविष्ट गर्नुहोस्" : "Enter your full name"}
                             value={credentials.fullName}
                             onChange={(e) => setCredentials({ ...credentials, fullName: e.target.value })}
                             required
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="reg-email">Email Address</Label>
+                          <Label htmlFor="reg-email">{isNepali ? "इमेल ठेगाना" : "Email Address"}</Label>
                           <div className="relative">
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                             <Input
                               id="reg-email"
                               type="email"
-                              placeholder="your@email.com"
+                              placeholder={isNepali ? "तपाईंको@इमेल.com" : "your@email.com"}
                               className="pl-10"
                               value={credentials.email}
                               onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
@@ -331,13 +355,13 @@ const Auth = () => {
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="reg-password">Create Password</Label>
+                          <Label htmlFor="reg-password">{isNepali ? "पासवर्ड सिर्जना गर्नुहोस्" : "Create Password"}</Label>
                           <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                             <Input
                               id="reg-password"
                               type={showPassword ? "text" : "password"}
-                              placeholder="Create a strong password"
+                              placeholder={isNepali ? "बलियो पासवर्ड सिर्जना गर्नुहोस्" : "Create a strong password"}
                               className="pl-10 pr-10"
                               value={credentials.password}
                               onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
@@ -353,11 +377,11 @@ const Auth = () => {
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="confirm-password">Confirm Password</Label>
+                          <Label htmlFor="confirm-password">{isNepali ? "पासवर्ड पुष्टि गर्नुहोस्" : "Confirm Password"}</Label>
                           <Input
                             id="confirm-password"
                             type="password"
-                            placeholder="Confirm your password"
+                            placeholder={isNepali ? "तपाईंको पासवर्ड पुष्टि गर्नुहोस्" : "Confirm your password"}
                             value={credentials.confirmPassword}
                             onChange={(e) => setCredentials({ ...credentials, confirmPassword: e.target.value })}
                             required
@@ -372,12 +396,12 @@ const Auth = () => {
                           {isLoading ? (
                             <span className="flex items-center gap-2">
                               <span className="w-4 h-4 border-2 border-can-white/30 border-t-can-white rounded-full animate-spin" />
-                              Processing...
+                              {isNepali ? "प्रशोधन हुँदैछ..." : "Processing..."}
                             </span>
                           ) : (
                             <>
                               <UserPlus className="w-4 h-4 mr-2" />
-                              Continue Registration
+                              {isNepali ? "दर्ता जारी राख्नुहोस्" : "Continue Registration"}
                             </>
                           )}
                         </Button>
@@ -388,7 +412,9 @@ const Auth = () => {
                           <div className="w-full border-t border-border" />
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
-                          <span className="bg-card px-2 text-muted-foreground">Or register directly</span>
+                          <span className="bg-card px-2 text-muted-foreground">
+                            {isNepali ? "वा सिधै दर्ता गर्नुहोस्" : "Or register directly"}
+                          </span>
                         </div>
                       </div>
 
@@ -400,7 +426,7 @@ const Auth = () => {
                       >
                         <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground gap-2">
                           <ExternalLink className="w-4 h-4" />
-                          Register at CAN Nepal Official Portal
+                          {isNepali ? "क्यान नेपाल आधिकारिक पोर्टलमा दर्ता गर्नुहोस्" : "Register at CAN Nepal Official Portal"}
                         </Button>
                       </a>
                     </TabsContent>
@@ -410,7 +436,7 @@ const Auth = () => {
 
               {/* Help Text */}
               <p className="text-center text-sm text-muted-foreground mt-6">
-                Need help? Contact us at{" "}
+                {isNepali ? "सहायता चाहिन्छ? " : "Need help? Contact us at "}
                 <a href="mailto:cankavre@gmail.com" className="text-primary hover:underline">
                   cankavre@gmail.com
                 </a>
@@ -420,6 +446,14 @@ const Auth = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const Auth = () => {
+  return (
+    <LanguageProvider>
+      <AuthContent />
+    </LanguageProvider>
   );
 };
 

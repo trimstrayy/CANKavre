@@ -9,13 +9,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useSearch } from "@/contexts/SearchContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import SearchPanel from "@/components/SearchPanel";
-
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const { isVisible: isSearchVisible, query, openSearch, closeSearch, performSearch } = useSearch();
+  const { t } = useLanguage();
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -76,29 +78,29 @@ const Navbar = () => {
   };
 
   const navLinks = [
-    { name: "Home", path: "/" },
-    { name: "About Us", path: "/about" },
+    { name: t("home"), path: "/" },
+    { name: t("aboutUs"), path: "/about" },
     {
-      name: "Committee",
+      name: t("committee"),
       path: "/about#committee",
       dropdown: [
-        { name: "Current Committee", path: "/about#committee" },
-        { name: "Past Committees", path: "/about#past-committees" },
-        { name: "Subcommittees", path: "/about#subcommittees" },
+        { name: t("currentCommittee"), path: "/about#committee" },
+        { name: t("pastCommittees"), path: "/about#past-committees" },
+        { name: t("subcommittees"), path: "/about#subcommittees" },
       ]
     },
-    { name: "Programs", path: "/programs" },
+    { name: t("programs"), path: "/programs" },
     {
-      name: "News",
+      name: t("news"),
       path: "/press-releases",
       dropdown: [
-        { name: "Press Releases", path: "/press-releases" },
-        { name: "Notice Board", path: "/notice" },
-        { name: "Events", path: "/events" },
+        { name: t("pressReleases"), path: "/press-releases" },
+        { name: t("noticeBoard"), path: "/notice" },
+        { name: t("events"), path: "/events" },
       ]
     },
-    { name: "Events & Gallery", path: "/events#gallery" },
-    { name: "Downloads", path: "/downloads" },
+    { name: t("eventsGallery"), path: "/events#gallery" },
+    { name: t("downloads"), path: "/downloads" },
   ];
 
   const isActive = (path: string) => {
@@ -186,6 +188,7 @@ const Navbar = () => {
 
             {/* Right Actions */}
             <div className="flex items-center gap-3">
+              <LanguageSwitcher />
               <form
                 onSubmit={handleSearchSubmit}
                 className={`group flex items-center overflow-hidden rounded-full border border-border bg-card transition-all duration-300 ease-out ${
@@ -209,7 +212,7 @@ const Navbar = () => {
                     performSearch(event.target.value);
                   }}
                   type="search"
-                  placeholder="Search site content..."
+                  placeholder={t("searchPlaceholder")}
                   className={`h-10 flex-1 bg-transparent text-sm text-foreground outline-none transition-all duration-300 ease-out ${
                     isSearchVisible ? "w-full opacity-100" : "w-0 opacity-0"
                   }`}
@@ -219,7 +222,7 @@ const Navbar = () => {
               <Link to="/auth" className="hidden md:block">
                 <Button className="bg-primary hover:bg-primary/90">
                   <LogIn className="w-4 h-4 mr-2" />
-                  Login
+                  {t("login")}
                 </Button>
               </Link>
 
@@ -259,7 +262,7 @@ const Navbar = () => {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-6 flex items-center justify-between">
-              <span className="font-heading text-lg font-semibold text-foreground">Menu</span>
+              <span className="font-heading text-lg font-semibold text-foreground">{t("menu")}</span>
               <button
                 onClick={() => setIsOpen(false)}
                 className="rounded-full border border-border p-2 text-foreground hover:bg-muted"
@@ -267,6 +270,9 @@ const Navbar = () => {
               >
                 <X className="h-5 w-5" />
               </button>
+            </div>
+            <div className="mb-4">
+              <LanguageSwitcher />
             </div>
             <nav className="flex-1 overflow-y-auto">
               <ul className="space-y-2">
@@ -316,7 +322,7 @@ const Navbar = () => {
               <Link to="/auth" className="block" onClick={() => setIsOpen(false)}>
                 <Button className="w-full bg-primary hover:bg-primary/90">
                   <LogIn className="w-4 h-4 mr-2" />
-                  Member Login
+                  {t("memberLogin")}
                 </Button>
               </Link>
             </div>

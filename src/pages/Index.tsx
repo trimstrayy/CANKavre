@@ -8,7 +8,6 @@ import {
   Eye,
   ListChecks,
   ChevronRight,
-  ChevronLeft,
   Users,
   Calendar,
   FileText,
@@ -32,11 +31,19 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Index = () => {
   const [currentHeadline, setCurrentHeadline] = useState(0);
+  const { t, isNepali } = useLanguage();
 
-  const headlines = [
+  const headlines = isNepali ? [
+    { title: "भविष्यको विकासको लागि क्यान अगुवाई", date: "२०८०/०३/१५" },
+    { title: "आईसीटी २०८० मा क्यारियर अवसरहरू", date: "२०८०/०२/२८" },
+    { title: "आईसीटी दिवस (मे २, २०२३) - रक्तदान कार्यक्रम", date: "२०८०/०१/१९" },
+    { title: "क्यान बागमती प्रदेश कार्यक्रम सहभागिता", date: "२०८०/०१/१०" },
+    { title: "क्यालेन्डर विमोचन र नयाँ वर्ष समारोह", date: "२०७९/१०/०१" },
+  ] : [
     { title: "Leading CAN for Future Growth", date: "2080/03/15" },
     { title: "Career Opportunities in ICT 2080", date: "2080/02/28" },
     { title: "ICT DAY (MAY 2, 2023) - Blood Donation Program", date: "2080/01/19" },
@@ -44,7 +51,23 @@ const Index = () => {
     { title: "Calendar Launch & New Year Celebration", date: "2079/10/01" },
   ];
 
-  const heroSlides = [
+  const heroSlides = isNepali ? [
+    {
+      image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1920&q=80",
+      title: "७औं कार्यसमिति",
+      subtitle: "क्यान काभ्रेलाई डिजिटल भविष्यतर्फ अग्रसर गर्दै",
+    },
+    {
+      image: "https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=1920&q=80",
+      title: "आईसीटी तालिम कार्यक्रमहरू",
+      subtitle: "युवालाई डिजिटल सीपले सशक्त बनाउँदै",
+    },
+    {
+      image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1920&q=80",
+      title: "सामुदायिक विकास",
+      subtitle: "काभ्रेमा डिजिटल खाडल पूर्ति गर्दै",
+    },
+  ] : [
     {
       image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1920&q=80",
       title: "7th Executive Committee",
@@ -62,9 +85,25 @@ const Index = () => {
     },
   ];
 
-  const latestNews = [
+  const latestNews = isNepali ? [
     {
       title: "व्यावसायी सँग आईसीटी बिजनेस मिट कार्यक्रम सम्पन्न",
+      date: "२०८०/०३/१५",
+      image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=400&q=80",
+    },
+    {
+      title: "कृषिमा आईसीटी जागरूकता कार्यक्रम",
+      date: "२०८०/०२/२०",
+      image: "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=400&q=80",
+    },
+    {
+      title: "शिक्षकहरूको लागि डिजिटल साक्षरता कार्यशाला",
+      date: "२०८०/०१/२५",
+      image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=400&q=80",
+    },
+  ] : [
+    {
+      title: "ICT Business Meet Program Completed with Entrepreneurs",
       date: "2080/03/15",
       image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=400&q=80",
     },
@@ -80,17 +119,42 @@ const Index = () => {
     },
   ];
 
-  const upcomingEvents = [
+  const upcomingEvents = isNepali ? [
+    { title: "आईसीटी क्यारियर परामर्श", date: "२०८०/०४/१५", location: "धुलिखेल" },
+    { title: "वेब डेभलपमेन्ट तालिम", date: "२०८०/०४/२०", location: "बनेपा" },
+    { title: "वार्षिक साधारण सभा", date: "२०८०/०५/०१", location: "काभ्रे" },
+  ] : [
     { title: "ICT Career Counseling", date: "2080/04/15", location: "Dhulikhel" },
     { title: "Web Development Training", date: "2080/04/20", location: "Banepa" },
     { title: "Annual General Meeting", date: "2080/05/01", location: "Kavre" },
   ];
 
   const stats = [
-    { label: "Years Active", value: "15+", color: "bg-primary" },
-    { label: "IT Clubs", value: "50+", color: "bg-secondary" },
-    { label: "Members", value: "500+", color: "bg-accent" },
-    { label: "Events", value: "200+", color: "bg-primary" },
+    { label: t("yearsActive"), value: "१५+", valueEn: "15+" },
+    { label: t("itClubs"), value: "५०+", valueEn: "50+" },
+    { label: t("members"), value: "५००+", valueEn: "500+" },
+    { label: t("eventsCount"), value: "२००+", valueEn: "200+" },
+  ];
+
+  const quickLinks = [
+    { title: t("downloads"), path: "/downloads", icon: Download },
+    { title: t("noticeBoard"), path: "/notice", icon: Bell },
+    { title: t("photoGallery"), path: "/events#gallery", icon: Image },
+    { title: t("membership"), path: "/membership", icon: Users },
+  ];
+
+  const objectives = isNepali ? [
+    "सबै उमेर समूहमा आईसीटी शिक्षा र डिजिटल साक्षरता प्रवर्द्धन गर्ने",
+    "जिल्लामा आईटी उद्यमी र स्टार्टअपहरूलाई समर्थन गर्ने",
+    "शैक्षिक संस्थाहरूमा आईटी क्लबहरू स्थापना र समन्वय गर्ने",
+    "कार्यशाला, सेमिनार र तालिम कार्यक्रमहरू आयोजना गर्ने",
+    "डिजिटल पहलहरूको लागि सरकार र निजी क्षेत्रसँग सहकार्य गर्ने"
+  ] : [
+    "Promote ICT education and digital literacy across all age groups",
+    "Support IT entrepreneurs and startups in the district",
+    "Establish and coordinate IT clubs in educational institutions",
+    "Organize workshops, seminars, and training programs",
+    "Collaborate with government and private sector for digital initiatives"
   ];
 
   useEffect(() => {
@@ -111,7 +175,7 @@ const Index = () => {
           <div className="flex items-center gap-4 py-2">
             <div className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-1.5 rounded-r-full font-semibold text-sm shrink-0">
               <Bell className="w-4 h-4" />
-              Headline
+              {t("headline")}
             </div>
             <div className="overflow-hidden flex-1">
               <div
@@ -151,12 +215,6 @@ const Index = () => {
             {heroSlides.map((slide, index) => (
               <CarouselItem key={index}>
                 <div className="relative h-[500px] md:h-[600px] overflow-hidden">
-                  {/* Top-left small banner */}
-                  {/* <div className="absolute top-6 left-6 z-20">
-                    <div className="inline-block bg-green-600 text-white px-4 py-1 rounded-full text-sm font-semibold shadow-md">
-                      Let's Build e-Nepal
-                    </div>
-                  </div> */}
                   <img
                     src={slide.image}
                     alt={slide.title}
@@ -167,7 +225,7 @@ const Index = () => {
                     <div className="container mx-auto px-4 pb-16 md:pb-24">
                       <div className="max-w-2xl animate-fade-in-up">
                         <div className="inline-block bg-primary text-primary-foreground px-4 py-1 text-sm font-semibold mb-4">
-                          CAN KAVRE
+                          {t("canKavre")}
                         </div>
                         <h1 className="font-heading text-3xl md:text-5xl lg:text-6xl font-bold text-can-white mb-4 drop-shadow-lg">
                           {slide.title}
@@ -176,14 +234,18 @@ const Index = () => {
                           {slide.subtitle}
                         </p>
                         <div className="flex flex-wrap gap-3">
-                          <Button size="lg" className="bg-primary hover:bg-primary/90 shadow-red">
-                            <Download className="w-5 h-5 mr-2" />
-                            Downloads
-                          </Button>
-                          <Button size="lg" variant="outline" className="bg-can-white/10 border-can-white text-can-white hover:bg-can-white hover:text-foreground backdrop-blur-sm">
-                            <Play className="w-5 h-5 mr-2" />
-                            Watch Video
-                          </Button>
+                          <Link to="/downloads">
+                            <Button size="lg" className="bg-primary hover:bg-primary/90 shadow-red">
+                              <Download className="w-5 h-5 mr-2" />
+                              {t("downloads")}
+                            </Button>
+                          </Link>
+                          <a href="https://www.youtube.com/@cankavre" target="_blank" rel="noopener noreferrer">
+                            <Button size="lg" variant="outline" className="bg-can-white/10 border-can-white text-can-white hover:bg-can-white hover:text-foreground backdrop-blur-sm">
+                              <Play className="w-5 h-5 mr-2" />
+                              {t("watchVideo")}
+                            </Button>
+                          </a>
                         </div>
                       </div>
                     </div>
@@ -196,20 +258,6 @@ const Index = () => {
           <CarouselNext className="right-4 bg-can-white/80 hover:bg-can-white border-0" />
         </Carousel>
       </section>
-      {/* <section className="relative py-8">
-        <div className="relative w-full">
-          <div aria-hidden="true">
-            <span className="block h-2 w-full bg-red-600" />
-            <span className="block h-2 w-full bg-green-600" />
-            <span className="block h-2 w-full bg-blue-600" />
-          </div>
-          <div className="absolute -top-0 right-4 sm:right-10">
-            <div className="inline-block rounded-full bg-green-600 px-4 py-1 text-xs font-semibold text-white shadow-md sm:text-sm">
-              Together We Can
-            </div>
-          </div>
-        </div>
-      </section> */}
 
       {/* Welcome Banner */}
       <section className="bg-gradient-to-r from-primary via-secondary to-accent py-4">
@@ -220,25 +268,24 @@ const Index = () => {
                 <Users className="w-6 h-6" />
               </div>
               <div>
-                <p className="font-heading font-bold text-lg">Computer Association of Nepal</p>
-                <p className="text-can-white/80 text-sm">Kavre Branch - Established 2065 B.S.</p>
+                <p className="font-heading font-bold text-lg">{t("computerAssociationNepal")}</p>
+                <p className="text-can-white/80 text-sm">{t("kavreBranch")} - {t("established")}</p>
               </div>
             </div>
             <div className="flex gap-4">
               <Link to="/membership">
                 <Button variant="outline" className="border-can-white text-can-white hover:bg-can-white hover:text-primary bg-transparent">
-                  Join CAN Kavre
+                  {t("joinCanKavre")}
                 </Button>
               </Link>
               <Link to="/about">
                 <Button className="bg-can-white text-primary hover:bg-can-white/90">
-                  Learn More
+                  {t("learnMore")}
                 </Button>
               </Link>
             </div>
           </div>
         </div>
-
       </section>
 
       {/* Main Content Grid */}
@@ -250,10 +297,10 @@ const Index = () => {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="font-heading text-2xl font-bold text-foreground flex items-center gap-2">
                   <Newspaper className="w-6 h-6 text-primary" />
-                  Latest News & Updates
+                  {t("latestNews")}
                 </h2>
                 <Link to="/press-releases" className="text-primary hover:text-primary/80 font-medium flex items-center gap-1">
-                  View All <ArrowRight className="w-4 h-4" />
+                  {t("viewAll")} <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
               <div className="grid md:grid-cols-2 gap-6">
@@ -289,7 +336,7 @@ const Index = () => {
               <div className="bg-card rounded-lg shadow-card overflow-hidden">
                 <div className="bg-secondary text-secondary-foreground px-4 py-3 font-heading font-bold flex items-center gap-2">
                   <Calendar className="w-5 h-5" />
-                  Upcoming Events
+                  {t("upcomingEvents")}
                 </div>
                 <div className="divide-y divide-border">
                   {upcomingEvents.map((event, idx) => (
@@ -313,7 +360,7 @@ const Index = () => {
                 <div className="p-4 bg-muted/50">
                   <Link to="/events">
                     <Button variant="outline" size="sm" className="w-full">
-                      View All Events
+                      {t("viewAllEvents")}
                     </Button>
                   </Link>
                 </div>
@@ -323,15 +370,10 @@ const Index = () => {
               <div className="bg-card rounded-lg shadow-card overflow-hidden">
                 <div className="bg-accent text-accent-foreground px-4 py-3 font-heading font-bold flex items-center gap-2">
                   <FileText className="w-5 h-5" />
-                  Quick Links
+                  {t("quickLinks")}
                 </div>
                 <div className="p-2">
-                  {[
-                    { title: "Downloads", path: "/downloads", icon: Download },
-                    { title: "Notice Board", path: "/notice", icon: Bell },
-                    { title: "Photo Gallery", path: "/events#gallery", icon: Image },
-                    { title: "Membership", path: "/membership", icon: Users },
-                  ].map((link, idx) => (
+                  {quickLinks.map((link, idx) => (
                     <Link
                       key={idx}
                       to={link.path}
@@ -362,7 +404,9 @@ const Index = () => {
               return (
                 <div key={stat.label} className="text-center">
                   <div className={`w-20 h-20 ${circleColor} rounded-full flex items-center justify-center mx-auto mb-3`}>
-                    <span className="text-2xl md:text-3xl font-heading font-bold text-white">{stat.value}</span>
+                    <span className="text-2xl md:text-3xl font-heading font-bold text-white">
+                      {isNepali ? stat.value : stat.valueEn}
+                    </span>
                   </div>
                   <p className="text-white font-medium">{stat.label}</p>
                 </div>
@@ -377,10 +421,10 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-10">
             <span className="inline-block bg-primary/10 text-primary px-4 py-1 rounded-full text-sm font-semibold mb-3">
-              Our Foundation
+              {t("ourFoundation")}
             </span>
             <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground">
-              Mission, Vision & Objectives
+              {t("missionVisionObjectives")}
             </h2>
           </div>
 
@@ -392,13 +436,11 @@ const Index = () => {
                     <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center shrink-0">
                       <Target className="w-7 h-7 text-primary-foreground" />
                     </div>
-                    <span className="font-heading text-xl font-bold text-foreground">Our Mission</span>
+                    <span className="font-heading text-xl font-bold text-foreground">{t("ourMission")}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-6 pb-6 pt-4 text-muted-foreground leading-relaxed text-base">
-                  To promote ICT development and digital literacy in Kavrepalanchok district by organizing
-                  training programs, workshops, and awareness campaigns. We aim to bridge the digital divide
-                  and empower local communities with technological skills for economic and social development.
+                  {t("missionText")}
                 </AccordionContent>
               </AccordionItem>
 
@@ -408,13 +450,11 @@ const Index = () => {
                     <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center shrink-0">
                       <Eye className="w-7 h-7 text-secondary-foreground" />
                     </div>
-                    <span className="font-heading text-xl font-bold text-foreground">Our Vision</span>
+                    <span className="font-heading text-xl font-bold text-foreground">{t("ourVision")}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-6 pb-6 pt-4 text-muted-foreground leading-relaxed text-base">
-                  To establish Kavrepalanchok as a digitally empowered district where every citizen has
-                  access to ICT resources and skills. We envision a future where technology drives
-                  sustainable development, innovation, and prosperity for all.
+                  {t("visionText")}
                 </AccordionContent>
               </AccordionItem>
 
@@ -424,18 +464,12 @@ const Index = () => {
                     <div className="w-14 h-14 rounded-full bg-accent flex items-center justify-center shrink-0">
                       <ListChecks className="w-7 h-7 text-accent-foreground" />
                     </div>
-                    <span className="font-heading text-xl font-bold text-foreground">Our Objectives</span>
+                    <span className="font-heading text-xl font-bold text-foreground">{t("ourObjectives")}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-6 pb-6 pt-4 text-muted-foreground leading-relaxed">
                   <ul className="space-y-3">
-                    {[
-                      "Promote ICT education and digital literacy across all age groups",
-                      "Support IT entrepreneurs and startups in the district",
-                      "Establish and coordinate IT clubs in educational institutions",
-                      "Organize workshops, seminars, and training programs",
-                      "Collaborate with government and private sector for digital initiatives"
-                    ].map((item, idx) => (
+                    {objectives.map((item, idx) => (
                       <li key={idx} className="flex items-start gap-3">
                         <ChevronRight className="w-5 h-5 text-accent shrink-0 mt-0.5" />
                         <span>{item}</span>
@@ -454,23 +488,26 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="bg-gradient-to-br from-primary via-secondary to-accent rounded-2xl p-8 md:p-12 text-center">
             <h2 className="font-heading text-2xl md:text-3xl font-bold text-can-white mb-4">
-              Want to Join CAN Kavre?
+              {isNepali ? "क्यान काभ्रेमा सामेल हुन चाहनुहुन्छ?" : "Want to Join CAN Kavre?"}
             </h2>
             <p className="text-can-white/80 max-w-xl mx-auto mb-6">
-              Become a part of the largest ICT community in Kavrepalanchok. Connect, learn, and grow with fellow professionals.
+              {isNepali 
+                ? "काभ्रेपलाञ्चोकको सबैभन्दा ठूलो आईसीटी समुदायको हिस्सा बन्नुहोस्। साथी पेशेवरहरूसँग जोडिनुहोस्, सिक्नुहोस् र बढ्नुहोस्।"
+                : "Become a part of the largest ICT community in Kavrepalanchok. Connect, learn, and grow with fellow professionals."
+              }
             </p>
-              <div className="flex flex-wrap justify-center gap-4">
-                <Link to="/auth">
-                  <Button size="lg" className="bg-can-white text-primary hover:bg-can-white/90 font-semibold">
-                    Member Login
-                  </Button>
-                </Link>
-                <a href="https://canfederation.org/member_registration" target="_blank" rel="noopener noreferrer">
-                  <Button size="lg" variant="outline" className="border-can-white text-can-white hover:bg-can-white/10 bg-transparent">
-                    Register Now
-                  </Button>
-                </a>
-              </div>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link to="/auth">
+                <Button size="lg" className="bg-can-white text-primary hover:bg-can-white/90 font-semibold">
+                  {t("memberLogin")}
+                </Button>
+              </Link>
+              <a href="https://canfederation.org/member_registration" target="_blank" rel="noopener noreferrer">
+                <Button size="lg" variant="outline" className="border-can-white text-can-white hover:bg-can-white/10 bg-transparent">
+                  {isNepali ? "अहिले दर्ता गर्नुहोस्" : "Register Now"}
+                </Button>
+              </a>
+            </div>
           </div>
         </div>
       </section>
