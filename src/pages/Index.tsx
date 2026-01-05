@@ -30,6 +30,8 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
+
+
 } from "@/components/ui/carousel";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -175,7 +177,7 @@ const Index = () => {
           <div className="flex items-center gap-4 py-2">
             <div className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-1.5 rounded-r-full font-semibold text-sm shrink-0">
               <Bell className="w-4 h-4" />
-              {t("headline")}
+              {t("Updates")}
             </div>
             <div className="overflow-hidden flex-1">
               <div
