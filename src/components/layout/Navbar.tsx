@@ -113,14 +113,14 @@ const Navbar = () => {
   return (
     <>
       <header className={headerClasses}>
-      <div className="bg-gradient-to-r from-primary via-secondary to-accent h-1" />
+      {/* <div className="bg-gradient-to-r from-primary via-secondary to-accent h-1" /> */}
       <div className="relative overflow-hidden border-b border-border bg-card py-4">
-        <div className="absolute inset-x-0 top-1/2 flex flex-col gap-[0px] -translate-y-1/2">
+        <div className="absolute inset-x-0 top-3 flex flex-col gap-[0px] -translate-y-1/2">
           <span className="h-2 w-full bg-red-600" />
           <span className="h-2 w-full bg-green-600" />
           <span className="h-2 w-full bg-blue-600" />
         </div>
-        <div className="relative z-10 container mx-auto px-4 flex justify-start">
+        <div className="absolute top-0 z-20 container mx-auto px-4 flex justify-start">
           <span className="inline-flex items-center bg-green-600 text-white px-5 py-1.5 rounded-full text-sm font-semibold shadow-md">
             Lets Build e-Nepal
           </span>

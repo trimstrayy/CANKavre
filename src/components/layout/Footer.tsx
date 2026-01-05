@@ -57,10 +57,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-foreground text-background">
-      {/* Tricolor top bar */}
-      <div className="h-1.5 gradient-bar" />
-      
+    <footer className="bg-foreground text-background relative">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {/* About Section */}
@@ -242,6 +239,20 @@ const Footer = () => {
               <Link to="/about" className="hover:text-secondary transition-colors">Terms of Service</Link>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Fixed bottom tricolor stripes */}
+      <div className="fixed bottom-0 left-0 right-0 z-50">
+        <div className="absolute inset-x-0 bottom-0 flex flex-col gap-[0px]">
+          <span className="h-2 w-full bg-red-600" />
+          <span className="h-2 w-full bg-green-600" />
+          <span className="h-2 w-full bg-blue-600" />
+        </div>
+        <div className="absolute bottom-0 z-20 container mx-auto px-4 flex justify-end">
+          <span className="inline-flex items-center bg-green-600 text-white px-5 py-1.5 rounded-full text-sm font-semibold shadow-md">
+            Together We Can
+          </span>
         </div>
       </div>
     </footer>

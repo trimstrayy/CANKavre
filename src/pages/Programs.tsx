@@ -76,6 +76,7 @@ type UpcomingProgram = {
   location: string;
   spots: string;
   ctaLabel: string;
+  ctaHref: string;
 };
 
 type HeroContent = {
@@ -224,6 +225,7 @@ const Programs = () => {
       location: "Dhulikhel",
       spots: "30 seats available",
       ctaLabel: "Register",
+      ctaHref: "/auth",
     },
     {
       title: "Cybersecurity Awareness Workshop",
@@ -231,6 +233,7 @@ const Programs = () => {
       location: "Banepa",
       spots: "50 seats available",
       ctaLabel: "Register",
+      ctaHref: "/auth",
     },
     {
       title: "Mobile App Development Training",
@@ -238,6 +241,7 @@ const Programs = () => {
       location: "Kavre",
       spots: "25 seats available",
       ctaLabel: "Register",
+      ctaHref: "/auth",
     },
   ]);
 
@@ -308,7 +312,7 @@ const Programs = () => {
           route: "/programs",
           title: `Upcoming: ${upcoming.title}`,
           description: `${upcoming.date} • ${upcoming.location}`,
-          content: `${upcoming.title} ${upcoming.date} ${upcoming.location} ${upcoming.spots} ${upcoming.ctaLabel}`,
+          content: `${upcoming.title} ${upcoming.date} ${upcoming.location} ${upcoming.spots} ${upcoming.ctaLabel} ${upcoming.ctaHref}`,
           tags: ["Programs", "Schedule"],
         });
       });
@@ -432,6 +436,7 @@ const Programs = () => {
         location: "",
         spots: "",
         ctaLabel: "Register",
+        ctaHref: "/auth",
       },
     ]);
   };
@@ -611,13 +616,56 @@ const Programs = () => {
                         </div>
                         <div className="flex items-center gap-4">
                           <span className="text-sm text-accent font-medium">{program.spots}</span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                          >
-                            {program.ctaLabel}
-                          </Button>
+                          {(() => {
+                            const trimmedHref = program.ctaHref?.trim();
+                            const buttonLabel = program.ctaLabel || "Register";
+                            const buttonClassName =
+                              "border-primary text-primary hover:bg-primary hover:text-primary-foreground";
+                            if (!trimmedHref) {
+                              return (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className={buttonClassName}
+                                  disabled
+                                >
+                                  {buttonLabel}
+                                </Button>
+                              );
+                            }
+
+                            const externalPattern = /^(https?:\/\/|mailto:|tel:)/i;
+                            if (externalPattern.test(trimmedHref)) {
+                              const isHttpLink = /^https?:\/\//i.test(trimmedHref);
+                              return (
+                                <Button
+                                  asChild
+                                  variant="outline"
+                                  size="sm"
+                                  className={buttonClassName}
+                                >
+                                  <a
+                                    href={trimmedHref}
+                                    target={isHttpLink ? "_blank" : undefined}
+                                    rel={isHttpLink ? "noopener noreferrer" : undefined}
+                                  >
+                                    {buttonLabel}
+                                  </a>
+                                </Button>
+                              );
+                            }
+
+                            return (
+                              <Button
+                                asChild
+                                variant="outline"
+                                size="sm"
+                                className={buttonClassName}
+                              >
+                                <Link to={trimmedHref}>{buttonLabel}</Link>
+                              </Button>
+                            );
+                          })()}
                         </div>
                       </div>
                     </CardContent>
@@ -1222,6 +1270,23 @@ const Programs = () => {
                     }
                   />
                 </div>
+                <div className="grid gap-2">
+                  <Label htmlFor={`upcoming-cta-href-${index}`}>Button Link</Label>
+                  <Input
+                    id={`upcoming-cta-href-${index}`}
+                    value={item.ctaHref}
+                    onChange={(event) =>
+                      setUpcomingDraft((prev) =>
+                        prev.map((program, idx) =>
+                          idx === index
+                            ? { ...program, ctaHref: event.target.value }
+                            : program
+                        )
+                      )
+                    }
+                    placeholder="/auth or https://example.com/form"
+                  />
+                </div>
                 <div className="flex justify-end">
                   <Button
                     variant="ghost"
@@ -1244,7 +1309,12 @@ const Programs = () => {
             </Button>
             <Button
               onClick={() => {
-                setUpcomingPrograms(upcomingDraft.map((item) => ({ ...item })));
+                setUpcomingPrograms(
+                  upcomingDraft.map((item) => ({
+                    ...item,
+                    ctaHref: item.ctaHref?.trim() ?? "",
+                  }))
+                );
                 setUpcomingDialogOpen(false);
               }}
             >

@@ -196,7 +196,7 @@ const Index = () => {
           <CarouselNext className="right-4 bg-can-white/80 hover:bg-can-white border-0" />
         </Carousel>
       </section>
-      <section className="relative py-8">
+      {/* <section className="relative py-8">
         <div className="relative w-full">
           <div aria-hidden="true">
             <span className="block h-2 w-full bg-red-600" />
@@ -209,7 +209,7 @@ const Index = () => {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Welcome Banner */}
       <section className="bg-gradient-to-r from-primary via-secondary to-accent py-4">
