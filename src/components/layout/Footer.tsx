@@ -118,7 +118,7 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-start gap-3 text-sm text-background/80">
                 <MapPin className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-                <span>{isNepali ? "धुलिखेल, काभ्रेपलाञ्चोक, बागमती प्रदेश, नेपाल" : "Dhulikhel, Kavrepalanchok, Bagmati Province, Nepal"}</span>
+                <span>{isNepali ? "बनेपा, काभ्रेपलाञ्चोक, बागमती प्रदेश, नेपाल" : "Banepa, Kavrepalanchok, Bagmati Province, Nepal"}</span>
               </li>
               <li className="flex items-center gap-3 text-sm text-background/80">
                 <Phone className="w-5 h-5 text-secondary shrink-0" />
@@ -263,7 +263,7 @@ const Footer = () => {
         </div>
         <div className="absolute bottom-0 z-20 container mx-auto px-4 flex justify-end">
           <span className="inline-flex items-center bg-green-600 text-white px-5 py-1.5 rounded-full text-sm font-semibold shadow-md">
-            {isNepali ? "सँगै हामी गर्न सक्छौं" : "Together We Can"}
+            {isNepali ? "Together We Can" : "Together We Can"}
           </span>
         </div>
       </div>
