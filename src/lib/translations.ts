@@ -160,7 +160,7 @@ export interface TranslationKeys {
   welcomeBack: string;
   signInToContinue: string;
   committeeMember: string;
-  subcommitteeMember: string;
+  memberAccount: string;
   forgotPassword: string;
   newRegistration: string;
   registerOnCanNepal: string;
@@ -333,7 +333,7 @@ export const translations: Record<Language, TranslationKeys> = {
     welcomeBack: "Welcome Back",
     signInToContinue: "Sign in to continue to your account",
     committeeMember: "Committee Member",
-    subcommitteeMember: "Subcommittee Member",
+    memberAccount: "Member",
     forgotPassword: "Forgot Password?",
     newRegistration: "New Registration",
     registerOnCanNepal: "Register on CAN Nepal",
@@ -504,7 +504,7 @@ export const translations: Record<Language, TranslationKeys> = {
     welcomeBack: "फेरि स्वागत छ",
     signInToContinue: "आफ्नो खातामा जारी राख्न साइन इन गर्नुहोस्",
     committeeMember: "समिति सदस्य",
-    subcommitteeMember: "उपसमिति सदस्य",
+    memberAccount: "सदस्य",
     forgotPassword: "पासवर्ड बिर्सनुभयो?",
     newRegistration: "नयाँ दर्ता",
     registerOnCanNepal: "क्यान नेपालमा दर्ता गर्नुहोस्",

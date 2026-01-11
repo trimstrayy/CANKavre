@@ -29,7 +29,7 @@ const AuthContent = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
-  const [loginType, setLoginType] = useState<"committee" | "subcommittee">("committee");
+  const [loginType, setLoginType] = useState<"committee" | "member">("committee");
   const [credentials, setCredentials] = useState({ 
     email: "", 
     password: "",
@@ -123,12 +123,12 @@ const AuthContent = () => {
                   </div>
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 rounded-lg bg-can-white/20 flex items-center justify-center shrink-0">
-                      <Building2 className="w-5 h-5" />
+                      <Users className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="font-semibold">{t("subcommitteeMember")}</h3>
+                      <h3 className="font-semibold">{t("memberAccount")}</h3>
                       <p className="text-sm text-can-white/70">
-                        {isNepali ? "समिति स्वीकृतिको लागि सामग्री पेश गर्नुहोस् र स्रोतहरू हेर्नुहोस्" : "Submit content for committee approval and view resources"}
+                        {isNepali ? "सेवाहरू पहुँच गर्नुहोस् र कार्यक्रमहरूमा दर्ता गर्नुहोस्" : "Access services and register for programs"}
                       </p>
                     </div>
                   </div>
@@ -221,21 +221,21 @@ const AuthContent = () => {
                         </button>
                         <button
                           type="button"
-                          onClick={() => setLoginType("subcommittee")}
+                          onClick={() => setLoginType("member")}
                           className={`p-4 rounded-xl border-2 transition-all ${
-                            loginType === "subcommittee" 
+                            loginType === "member" 
                               ? "border-secondary bg-secondary/5" 
                               : "border-border hover:border-secondary/50"
                           }`}
                         >
-                          <Building2 className={`w-8 h-8 mx-auto mb-2 ${
-                            loginType === "subcommittee" ? "text-secondary" : "text-muted-foreground"
+                          <Users className={`w-8 h-8 mx-auto mb-2 ${
+                            loginType === "member" ? "text-secondary" : "text-muted-foreground"
                           }`} />
                           <span className={`font-medium block ${
-                            loginType === "subcommittee" ? "text-secondary" : "text-foreground"
-                          }`}>{isNepali ? "उपसमिति" : "Subcommittee"}</span>
+                            loginType === "member" ? "text-secondary" : "text-foreground"
+                          }`}>{isNepali ? "सदस्य" : "Member"}</span>
                           <span className="text-xs text-muted-foreground">
-                            {isNepali ? "सीमित पहुँच" : "Limited Access"}
+                            {isNepali ? "सेवा प्राप्तकर्ता" : "Service Receiver"}
                           </span>
                         </button>
                       </div>
@@ -307,8 +307,8 @@ const AuthContent = () => {
                             <>
                               <LogIn className="w-4 h-4 mr-2" />
                               {isNepali 
-                                ? `${loginType === "committee" ? "समिति" : "उपसमिति"}को रूपमा साइन इन गर्नुहोस्`
-                                : `Sign In as ${loginType === "committee" ? "Committee" : "Subcommittee"}`
+                                ? `${loginType === "committee" ? "समिति" : "सदस्य"}को रूपमा साइन इन गर्नुहोस्`
+                                : `Sign In as ${loginType === "committee" ? "Committee" : "Member"}`
                               }
                             </>
                           )}

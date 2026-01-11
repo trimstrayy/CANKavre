@@ -63,7 +63,7 @@ type UpcomingProgram = {
   spotsNe: string;
   ctaLabel: string;
   ctaLabelNe: string;
-  ctaHref: string;
+  registerLink: string; // External registration link
 };
 
 const achievements: AchievementItem[] = [
@@ -153,7 +153,7 @@ const upcomingPrograms: UpcomingProgram[] = [
     spotsNe: "३० सिटहरू उपलब्ध",
     ctaLabel: "Register",
     ctaLabelNe: "दर्ता गर्नुहोस्",
-    ctaHref: "/auth",
+    registerLink: "https://forms.google.com/your-registration-form", // Edit this link
   },
   {
     title: "Cybersecurity Awareness Workshop",
@@ -165,7 +165,7 @@ const upcomingPrograms: UpcomingProgram[] = [
     spotsNe: "५० सिटहरू उपलब्ध",
     ctaLabel: "Register",
     ctaLabelNe: "दर्ता गर्नुहोस्",
-    ctaHref: "/auth",
+    registerLink: "https://forms.google.com/your-registration-form", // Edit this link
   },
   {
     title: "Mobile App Development Training",
@@ -177,7 +177,7 @@ const upcomingPrograms: UpcomingProgram[] = [
     spotsNe: "२५ सिटहरू उपलब्ध",
     ctaLabel: "Register",
     ctaLabelNe: "दर्ता गर्नुहोस्",
-    ctaHref: "/auth",
+    registerLink: "https://forms.google.com/your-registration-form", // Edit this link
   },
 ];
 
@@ -328,11 +328,15 @@ const Programs = () => {
                   <div className="text-sm text-accent font-medium">
                     {isNepali ? program.spotsNe : program.spots}
                   </div>
-                  <Link to={program.ctaHref}>
+                  <a 
+                    href={program.registerLink} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
                     <Button className="w-full mt-4 bg-secondary hover:bg-secondary/90">
                       {isNepali ? program.ctaLabelNe : program.ctaLabel}
                     </Button>
-                  </Link>
+                  </a>
                 </CardContent>
               </Card>
             ))}
