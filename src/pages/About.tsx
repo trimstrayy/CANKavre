@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Users,
   History,
@@ -6,11 +6,13 @@ import {
   GraduationCap,
   Phone,
   User,
+  Plus,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import EditButton from "@/components/EditButton";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +32,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAdmin } from "@/hooks/useAdmin";
+import { useToast } from "@/hooks/use-toast";
+import ContentModal, { FieldDef } from "@/components/ContentModal";
+import { committeeMembersApi, CommitteeMemberRecord } from "@/lib/api";
 
 interface CommitteeMember {
   name: string;
@@ -64,32 +70,49 @@ interface ItClub {
 }
 
 const initialCommitteeMembers: CommitteeMember[] = [
-  { name: "Ram Bahadur Shrestha", nameNe: "राम बहादुर श्रेष्ठ", position: "President", positionNe: "अध्यक्ष", contact: "+977-98XXXXXXXX", photo: "" },
-  { name: "Sita Kumari Tamang", nameNe: "सीता कुमारी तामाङ", position: "Vice President", positionNe: "उपाध्यक्ष", contact: "+977-98XXXXXXXX", photo: "" },
-  { name: "Hari Prasad Gautam", nameNe: "हरि प्रसाद गौतम", position: "General Secretary", positionNe: "महासचिव", contact: "+977-98XXXXXXXX", photo: "" },
-  { name: "Maya Devi Maharjan", nameNe: "माया देवी महर्जन", position: "Secretary", positionNe: "सचिव", contact: "+977-98XXXXXXXX", photo: "" },
-  { name: "Krishna Bahadur Lama", nameNe: "कृष्ण बहादुर लामा", position: "Treasurer", positionNe: "कोषाध्यक्ष", contact: "+977-98XXXXXXXX", photo: "" },
-  { name: "Sunita Karki", nameNe: "सुनिता कार्की", position: "Joint Secretary", positionNe: "सहसचिव", contact: "+977-98XXXXXXXX", photo: "" },
+  { name: "Ram Chandra Nyaupane", nameNe: "रामचन्द्र न्यौपाने", position: "President", positionNe: "अध्यक्ष", contact: "+977-98XXXXXXXX", photo: "" },
+  { name: "Shrawan Kumar Acharya", nameNe: "श्रवण कुमार आचार्य", position: "Senior Vice President", positionNe: "बरिष्ठ उपाध्यक्ष", contact: "+977-98XXXXXXXX", photo: "" },
+  { name: "Dipak Sapkota", nameNe: "दिपक सापकोटा", position: "Vice President", positionNe: "उपाध्यक्ष", contact: "+977-98XXXXXXXX", photo: "" },
+  { name: "Devaki Acharya", nameNe: "देवकी आचार्य", position: "Secretary", positionNe: "सचिव", contact: "+977-98XXXXXXXX", photo: "" },
+  { name: "Kewal Prasad Timalsina", nameNe: "केवल प्रसाद तिमल्सिना", position: "Treasurer", positionNe: "कोषाध्यक्ष", contact: "+977-98XXXXXXXX", photo: "" },
+  { name: "Rukesh Rajbhandari", nameNe: "रुकेश राजभण्डारी", position: "Joint Secretary", positionNe: "सहसचिव", contact: "+977-98XXXXXXXX", photo: "" },
+  { name: "Rishi Ram Gautam", nameNe: "ऋषिराम गौतम", position: "Member", positionNe: "सदस्य", contact: "+977-98XXXXXXXX", photo: "" },
+  { name: "Rita Shrestha", nameNe: "रीता श्रेष्ठ", position: "Member", positionNe: "सदस्य", contact: "+977-98XXXXXXXX", photo: "" },
+  { name: "Vivek Timalsina", nameNe: "विवेक तिमल्सिना", position: "Member", positionNe: "सदस्य", contact: "+977-98XXXXXXXX", photo: "" },
+  { name: "Shyam Gopal Shrestha", nameNe: "श्याम गोपाल श्रेष्ठ", position: "Member", positionNe: "सदस्य", contact: "+977-98XXXXXXXX", photo: "" },
+  { name: "Abodh Bhushan Khoju Shrestha", nameNe: "अवोध भुषण खोजु श्रेष्ठ", position: "Member", positionNe: "सदस्य", contact: "+977-98XXXXXXXX", photo: "" },
+  { name: "Ujwal Thapa Magar", nameNe: "उज्वल थापा मगर", position: "Member", positionNe: "सदस्य", contact: "+977-98XXXXXXXX", photo: "" },
+  { name: "Prakash Paudel", nameNe: "प्रकाश पौडेल", position: "Member", positionNe: "सदस्य", contact: "+977-98XXXXXXXX", photo: "" },
+  { name: "Umesh Adhikari", nameNe: "उमेश अधिकारी", position: "Member", positionNe: "सदस्य", contact: "+977-98XXXXXXXX", photo: "" },
 ];
 
 const initialPastCommittees: PastCommittee[] = [
   {
-    period: "7th Committee (2077-2079)",
-    periodNe: "७औं समिति (२०७७-२०७९)",
-    members: initialCommitteeMembers.slice(0, 4).map((member) => ({ ...member })),
+    period: "9th Committee (2077-2079)",
+    periodNe: "९औं समिति (२०७७-२०७९)",
+    members: [
+      { name: "Jayram Humagain", nameNe: "जयराम हुमागाईं", position: "President", positionNe: "अध्यक्ष", contact: "+977-98XXXXXXXX", photo: "" },
+      { name: "Nabaraj Bhurtel", nameNe: "नवराज भुर्तेल", position: "Immediate Past President", positionNe: "तत्काल पूर्व अध्यक्ष", contact: "+977-98XXXXXXXX", photo: "" },
+    ],
+    category: "9th",
+  },
+  {
+    period: "8th Committee (2075-2077)",
+    periodNe: "८औं समिति (२०७५-२०७७)",
+    members: [
+      { name: "Nabaraj Bhurtel", nameNe: "नवराज भुर्तेल", position: "President", positionNe: "अध्यक्ष", contact: "+977-98XXXXXXXX", photo: "" },
+      { name: "Kailash Palanchoke", nameNe: "कैलाश पलान्चोके", position: "Past President", positionNe: "पूर्व अध्यक्ष", contact: "+977-98XXXXXXXX", photo: "" },
+    ],
+    category: "8th",
+  },
+  {
+    period: "7th Committee (2073-2075)",
+    periodNe: "७औं समिति (२०७३-२०७५)",
+    members: [
+      { name: "Kailash Palanchoke", nameNe: "कैलाश पलान्चोके", position: "President", positionNe: "अध्यक्ष", contact: "+977-98XXXXXXXX", photo: "" },
+      { name: "Niranjan Manandhar", nameNe: "निरञ्जन मानन्धर", position: "Past President", positionNe: "पूर्व अध्यक्ष", contact: "+977-98XXXXXXXX", photo: "" },
+    ],
     category: "7th",
-  },
-  {
-    period: "6th Committee (2075-2077)",
-    periodNe: "६औं समिति (२०७५-२०७७)",
-    members: initialCommitteeMembers.slice(0, 4).map((member) => ({ ...member })),
-    category: "6th",
-  },
-  {
-    period: "5th Committee (2073-2075)",
-    periodNe: "५औं समिति (२०७३-२०७५)",
-    members: initialCommitteeMembers.slice(0, 4).map((member) => ({ ...member })),
-    category: "5th",
   },
 ];
 
@@ -98,6 +121,8 @@ const initialSubcommittees: Subcommittee[] = [
   { name: "Education IT Subcommittee", nameNe: "शिक्षा आईटी उपसमिति", focus: "E-learning & digital education", focusNe: "ई-लर्निङ र डिजिटल शिक्षा", members: 10, type: "education" },
   { name: "Agriculture IT Subcommittee", nameNe: "कृषि आईटी उपसमिति", focus: "Smart farming technologies", focusNe: "स्मार्ट कृषि प्रविधिहरू", members: 6, type: "agriculture" },
   { name: "Women IT Subcommittee", nameNe: "महिला आईटी उपसमिति", focus: "Women empowerment through ICT", focusNe: "आईसीटी मार्फत महिला सशक्तिकरण", members: 12, type: "women" },
+  { name: "E-Village Subcommittee", nameNe: "ई-गाउँ उपसमिति", focus: "Smart village & e-governance at local level", focusNe: "स्थानीय तहमा स्मार्ट गाउँ र ई-शासन", members: 7, type: "evillage" },
+  { name: "Business & ICT Meet Subcommittee", nameNe: "व्यापार र आईसीटी मिट उपसमिति", focus: "Connecting ICT entrepreneurs & business networking", focusNe: "आईसीटी उद्यमी जडान र व्यापार नेटवर्किङ", members: 9, type: "business" },
 ];
 
 const initialItClubs: ItClub[] = [
@@ -107,16 +132,109 @@ const initialItClubs: ItClub[] = [
   { name: "Kavre Multiple Campus IT Club", nameNe: "काभ्रे बहुमुखी क्याम्पस आईटी क्लब", students: 65, established: 2017 },
 ];
 
+const memberFields: FieldDef[] = [
+  { key: "name", label: "Name (EN)", type: "text", required: true, placeholder: "Ram Chandra Nyaupane" },
+  { key: "nameNe", label: "Name (NE)", type: "text", required: true, placeholder: "रामचन्द्र न्यौपाने" },
+  { key: "position", label: "Position (EN)", type: "text", required: true, placeholder: "President" },
+  { key: "positionNe", label: "Position (NE)", type: "text", required: true, placeholder: "अध्यक्ष" },
+  { key: "contact", label: "Contact", type: "text", placeholder: "+977-98XXXXXXXX" },
+  { key: "photo", label: "Photo URL", type: "text", placeholder: "https://..." },
+  { key: "sortOrder", label: "Sort Order", type: "number", placeholder: "0" },
+];
+
 const About = () => {
   const { t, isNepali } = useLanguage();
-  const [committeeMembers] = useState(initialCommitteeMembers);
+  const { isAdmin, token } = useAdmin();
+  const { toast } = useToast();
+
+  // DB-driven committee members (falls back to hardcoded if API unreachable)
+  const [committeeMembers, setCommitteeMembers] = useState(initialCommitteeMembers);
+  const [dbMembers, setDbMembers] = useState<CommitteeMemberRecord[]>([]);
+  const [dbLoaded, setDbLoaded] = useState(false);
+
+  // Modal state
+  const [memberModalOpen, setMemberModalOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [editMember, setEditMember] = useState<Record<string, any> | undefined>();
+  const [isSaving, setIsSaving] = useState(false);
+
   const [subcommitteeData] = useState(initialSubcommittees);
   const [itClubData] = useState(initialItClubs);
   const [pastCommitteeData] = useState(initialPastCommittees);
   const [showPastCommittees, setShowPastCommittees] = useState(false);
 
-  const MemberCard = ({ member }: { member: CommitteeMember }) => (
-    <Card className="card-hover">
+  // Fetch DB members on mount
+  useEffect(() => {
+    committeeMembersApi.getAll()
+      .then((rows) => {
+        if (rows.length > 0) {
+          setDbMembers(rows);
+          setDbLoaded(true);
+        }
+      })
+      .catch(() => { /* backend offline — use hardcoded */ });
+  }, []);
+
+  // Determine which members to show
+  const displayMembers = dbLoaded
+    ? dbMembers.sort((a, b) => a.sortOrder - b.sortOrder).map(m => ({
+        name: m.name,
+        nameNe: m.nameNe,
+        position: m.position,
+        positionNe: m.positionNe,
+        contact: m.contact,
+        photo: m.photo,
+        id: m.id,
+      }))
+    : committeeMembers.map((m, i) => ({ ...m, id: i }));
+
+  const handleMemberSubmit = async (data: Record<string, unknown>) => {
+    if (!token) return;
+    setIsSaving(true);
+    try {
+      if (data.id && dbLoaded) {
+        const updated = await committeeMembersApi.update(token, data.id as number, data);
+        setDbMembers(prev => prev.map(m => m.id === updated.id ? updated : m));
+        toast({ title: isNepali ? "सदस्य अद्यावधिक भयो" : "Member Updated" });
+      } else {
+        const created = await committeeMembersApi.create(token, data);
+        setDbMembers(prev => [...prev, created]);
+        if (!dbLoaded) setDbLoaded(true);
+        toast({ title: isNepali ? "सदस्य थपियो" : "Member Added" });
+      }
+      setMemberModalOpen(false);
+    } catch {
+      toast({ title: "Error", description: "Failed to save", variant: "destructive" });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleMemberDelete = async (id: number) => {
+    if (!token || !dbLoaded) return;
+    const backup = dbMembers;
+    setDbMembers(prev => prev.filter(m => m.id !== id));
+    try {
+      await committeeMembersApi.remove(token, id);
+      toast({ title: isNepali ? "सदस्य हटाइयो" : "Member Removed" });
+    } catch {
+      setDbMembers(backup);
+      toast({ title: "Error", variant: "destructive" });
+    }
+  };
+
+  const MemberCard = ({ member }: { member: CommitteeMember & { id?: number } }) => (
+    <Card className="card-hover relative group">
+      {isAdmin && dbLoaded && member.id !== undefined && (
+        <div className="absolute right-1 top-1 z-10 flex gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => { setEditMember(member); setMemberModalOpen(true); }}>
+            <Pencil className="h-3 w-3" />
+          </Button>
+          <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => handleMemberDelete(member.id!)}>
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      )}
       <CardContent className="p-4 text-center">
         <div className="w-20 h-20 mx-auto mb-3 overflow-hidden rounded-full bg-muted flex items-center justify-center">
           {member.photo ? (
@@ -174,28 +292,28 @@ const About = () => {
               <Card className="text-center card-hover">
                 <CardContent className="p-6">
                   <Users className="w-8 h-8 mx-auto mb-2 text-primary" />
-                  <div className="text-2xl font-heading font-bold text-primary">500+</div>
+                  <div className="text-2xl font-heading font-bold text-primary">152+</div>
                   <div className="text-sm text-muted-foreground">{t("members")}</div>
                 </CardContent>
               </Card>
               <Card className="text-center card-hover">
                 <CardContent className="p-6">
                   <Building2 className="w-8 h-8 mx-auto mb-2 text-secondary" />
-                  <div className="text-2xl font-heading font-bold text-secondary">50+</div>
+                  <div className="text-2xl font-heading font-bold text-secondary">13+</div>
                   <div className="text-sm text-muted-foreground">{t("itClubs")}</div>
                 </CardContent>
               </Card>
               <Card className="text-center card-hover">
                 <CardContent className="p-6">
                   <GraduationCap className="w-8 h-8 mx-auto mb-2 text-accent" />
-                  <div className="text-2xl font-heading font-bold text-accent">5000+</div>
+                  <div className="text-2xl font-heading font-bold text-accent">2000+</div>
                   <div className="text-sm text-muted-foreground">{t("beneficiaries")}</div>
                 </CardContent>
               </Card>
               <Card className="text-center card-hover">
                 <CardContent className="p-6">
                   <History className="w-8 h-8 mx-auto mb-2 text-primary" />
-                  <div className="text-2xl font-heading font-bold text-primary">15+</div>
+                  <div className="text-2xl font-heading font-bold text-primary">18+</div>
                   <div className="text-sm text-muted-foreground">{t("yearsActive")}</div>
                 </CardContent>
               </Card>
@@ -227,13 +345,30 @@ const About = () => {
             <TabsContent value="committee" className="animate-fade-in">
               <div className="text-center mb-8">
                 <h3 className="font-heading text-2xl font-bold text-foreground">{t("currentMainCommittee")}</h3>
-                <p className="text-muted-foreground">{isNepali ? "८औं कार्यसमिति (२०७९-२०८१)" : "8th Executive Committee (2079-2081)"}</p>
+                <p className="text-muted-foreground">{isNepali ? "१०औं अधिवेशन — कार्यसमिति (२०७९–२०८१)" : "10th Convention — Executive Committee (2079-2081)"}</p>
+                {isAdmin && (
+                  <Button className="mt-4 gap-2" onClick={() => { setEditMember(undefined); setMemberModalOpen(true); }}>
+                    <Plus className="h-4 w-4" />
+                    {isNepali ? "सदस्य थप्नुहोस्" : "Add Member"}
+                  </Button>
+                )}
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {committeeMembers.map((member, index) => (
+                {displayMembers.map((member, index) => (
                   <MemberCard key={`${member.name}-${index}`} member={member} />
                 ))}
               </div>
+
+              {/* Member Add/Edit Modal */}
+              <ContentModal
+                open={memberModalOpen}
+                onOpenChange={setMemberModalOpen}
+                title={editMember?.id ? (isNepali ? "सदस्य सम्पादन" : "Edit Member") : (isNepali ? "नयाँ सदस्य" : "Add Member")}
+                fields={memberFields}
+                initial={editMember}
+                onSubmit={handleMemberSubmit}
+                isSaving={isSaving}
+              />
             </TabsContent>
 
             {/* Subcommittees */}
