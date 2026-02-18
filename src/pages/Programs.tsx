@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   GraduationCap,
@@ -10,7 +10,9 @@ import {
   ArrowRight,
   CheckCircle2,
   Calendar,
-  MapPin,
+  Plus,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +24,17 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAdmin } from "@/hooks/useAdmin";
+import { useToast } from "@/hooks/use-toast";
+import EditableField from "@/components/EditableField";
+import ProgramModal, { ProgramFormData, CATEGORY_LABELS } from "@/components/ProgramModal";
+import {
+  Program,
+  getPrograms,
+  createProgram,
+  updateProgram,
+  deleteProgram,
+} from "@/lib/api";
 
 const iconMap = {
   laptop: Laptop,
@@ -53,24 +66,12 @@ type AchievementItem = {
   bgColor: string;
 };
 
-type UpcomingProgram = {
-  title: string;
-  titleNe: string;
-  date: string;
-  location: string;
-  locationNe: string;
-  spots: string;
-  spotsNe: string;
-  ctaLabel: string;
-  ctaLabelNe: string;
-  registerLink: string; // External registration link
-};
 
 const achievements: AchievementItem[] = [
-  { number: "50+", label: "IT Clubs Established", labelNe: "आईटी क्लबहरू स्थापित", bgColor: "bg-green-500" },
-  { number: "5000+", label: "Citizens Trained", labelNe: "नागरिकहरू तालिम प्राप्त", bgColor: "bg-green-500" },
+  { number: "13+", label: "IT Clubs Established", labelNe: "आईटी क्लबहरू स्थापित", bgColor: "bg-green-500" },
+  { number: "2000+", label: "Citizens Trained", labelNe: "नागरिकहरू तालिम प्राप्त", bgColor: "bg-green-500" },
   { number: "100+", label: "Programs Conducted", labelNe: "कार्यक्रमहरू सम्पन्न", bgColor: "bg-blue-500" },
-  { number: "15+", label: "Schools Covered", labelNe: "विद्यालयहरू समेटिएको", bgColor: "bg-blue-500" },
+  { number: "13+", label: "Municipalities Covered", labelNe: "पालिकाहरू समेटिएको", bgColor: "bg-blue-500" },
 ];
 
 const programs: ProgramItem[] = [
@@ -142,47 +143,144 @@ const programs: ProgramItem[] = [
   },
 ];
 
-const upcomingPrograms: UpcomingProgram[] = [
-  {
-    title: "Web Development Bootcamp",
-    titleNe: "वेब डेभलपमेन्ट बुटक्याम्प",
-    date: "2080/04/15 - 2080/04/30",
-    location: "Dhulikhel",
-    locationNe: "धुलिखेल",
-    spots: "30 seats available",
-    spotsNe: "३० सिटहरू उपलब्ध",
-    ctaLabel: "Register",
-    ctaLabelNe: "दर्ता गर्नुहोस्",
-    registerLink: "https://forms.google.com/your-registration-form", // Edit this link
-  },
-  {
-    title: "Cybersecurity Awareness Workshop",
-    titleNe: "साइबर सुरक्षा जागरूकता कार्यशाला",
-    date: "2080/05/10",
-    location: "Banepa",
-    locationNe: "बनेपा",
-    spots: "50 seats available",
-    spotsNe: "५० सिटहरू उपलब्ध",
-    ctaLabel: "Register",
-    ctaLabelNe: "दर्ता गर्नुहोस्",
-    registerLink: "https://forms.google.com/your-registration-form", // Edit this link
-  },
-  {
-    title: "Mobile App Development Training",
-    titleNe: "मोबाइल एप डेभलपमेन्ट तालिम",
-    date: "2080/05/20 - 2080/06/05",
-    location: "Kavre",
-    locationNe: "काभ्रे",
-    spots: "25 seats available",
-    spotsNe: "२५ सिटहरू उपलब्ध",
-    ctaLabel: "Register",
-    ctaLabelNe: "दर्ता गर्नुहोस्",
-    registerLink: "https://forms.google.com/your-registration-form", // Edit this link
-  },
-];
-
 const Programs = () => {
   const { t, isNepali } = useLanguage();
+  const { isAdmin, token } = useAdmin();
+  const { toast } = useToast();
+
+  // ── DB-driven programs (upcoming/managed) ──────────────────────
+  const [dbPrograms, setDbPrograms] = useState<Program[]>([]);
+  const [isLoadingDb, setIsLoadingDb] = useState(true);
+
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<ProgramFormData | undefined>();
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Fetch DB programs on mount
+  useEffect(() => {
+    getPrograms()
+      .then(({ programs: p }) => setDbPrograms(p))
+      .catch(() => {
+        // Backend may not be running — fall back silently
+      })
+      .finally(() => setIsLoadingDb(false));
+  }, []);
+
+  // ── Handlers ───────────────────────────────────────────────────
+  const openAdd = () => {
+    setEditTarget(undefined);
+    setModalOpen(true);
+  };
+
+  const openEdit = (prog: Program) => {
+    setEditTarget({
+      id: prog.id,
+      title: prog.title,
+      titleNe: prog.titleNe,
+      description: prog.description,
+      descriptionNe: prog.descriptionNe,
+      deadline: prog.deadline ? prog.deadline.slice(0, 10) : "",
+      category: prog.category,
+    });
+    setModalOpen(true);
+  };
+
+  const handleSubmit = async (data: ProgramFormData) => {
+    if (!token) return;
+    setIsSaving(true);
+    try {
+      if (data.id) {
+        // ── Optimistic update ────────────────────────────────────
+        setDbPrograms((prev) =>
+          prev.map((p) =>
+            p.id === data.id ? { ...p, ...data, updatedAt: new Date().toISOString() } : p
+          )
+        );
+        const { program } = await updateProgram(token, data.id, data);
+        // Reconcile with server response
+        setDbPrograms((prev) => prev.map((p) => (p.id === program.id ? program : p)));
+        toast({
+          title: isNepali ? "कार्यक्रम अद्यावधिक भयो" : "Program Updated",
+          description: isNepali
+            ? "कार्यक्रम सफलतापूर्वक अद्यावधिक गरियो।"
+            : "The program has been updated successfully.",
+        });
+      } else {
+        const { program } = await createProgram(token, data);
+        setDbPrograms((prev) => [...prev, program]);
+        toast({
+          title: isNepali ? "कार्यक्रम थपियो" : "Program Added",
+          description: isNepali
+            ? "नयाँ कार्यक्रम सफलतापूर्वक थपियो।"
+            : "The new program has been added successfully.",
+        });
+      }
+      setModalOpen(false);
+    } catch {
+      toast({
+        title: isNepali ? "त्रुटि" : "Error",
+        description: isNepali
+          ? "सेभ गर्न असफल भयो। पुनः प्रयास गर्नुहोस्।"
+          : "Failed to save. Please try again.",
+        variant: "destructive",
+      });
+      // Re-fetch to reconcile on error
+      getPrograms()
+        .then(({ programs: p }) => setDbPrograms(p))
+        .catch(() => {});
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!token) return;
+    // Optimistic removal
+    const backup = dbPrograms;
+    setDbPrograms((prev) => prev.filter((p) => p.id !== id));
+    try {
+      await deleteProgram(token, id);
+      toast({
+        title: isNepali ? "कार्यक्रम हटाइयो" : "Program Deleted",
+      });
+    } catch {
+      setDbPrograms(backup);
+      toast({
+        title: isNepali ? "त्रुटि" : "Error",
+        description: isNepali ? "हटाउन असफल भयो।" : "Failed to delete.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // ── Inline field save for static featured programs (local only) ──
+  const [localPrograms, setLocalPrograms] = useState(programs);
+
+  const handleInlineUpdate = (
+    index: number,
+    field: keyof ProgramItem,
+    value: string,
+    fieldNe?: keyof ProgramItem,
+    valueNe?: string
+  ) => {
+    setLocalPrograms((prev) => {
+      const next = [...prev];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (next[index] as any)[field] = value;
+      if (fieldNe && valueNe !== undefined) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (next[index] as any)[fieldNe] = valueNe;
+      }
+      return next;
+    });
+    toast({
+      title: isNepali ? "अद्यावधिक भयो" : "Updated",
+      description: isNepali
+        ? "स्थानीय परिवर्तन सेभ भयो। (नोट: दुवै EN/NE अपडेट गर्नुहोस्)"
+        : "Local change saved. (Note: update both EN/NE for bilingual sync)",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -257,7 +355,7 @@ const Programs = () => {
 
           <Carousel className="w-full max-w-5xl mx-auto">
             <CarouselContent>
-              {programs.map((program, index) => {
+              {localPrograms.map((program, index) => {
                 const IconComponent = iconMap[program.icon];
                 return (
                   <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/2">
@@ -274,14 +372,44 @@ const Programs = () => {
                           <div className={`w-10 h-10 rounded-lg bg-${program.color}/10 flex items-center justify-center`}>
                             <IconComponent className={`w-5 h-5 text-${program.color}`} />
                           </div>
-                          <CardTitle className="text-lg">{isNepali ? program.titleNe : program.title}</CardTitle>
+                          <CardTitle className="text-lg">
+                            <EditableField
+                              value={isNepali ? program.titleNe : program.title}
+                              valueNe={program.titleNe}
+                              canEdit={isAdmin}
+                              bilingual
+                              onSave={(v, vNe) =>
+                                handleInlineUpdate(
+                                  index,
+                                  isNepali ? "titleNe" : "title",
+                                  v,
+                                  isNepali ? "title" : "titleNe",
+                                  vNe
+                                )
+                              }
+                            />
+                          </CardTitle>
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-muted-foreground text-sm mb-4">
-                          {isNepali ? program.descriptionNe : program.description}
-                        </p>
-                        <div className="space-y-2">
+                        <EditableField
+                          value={isNepali ? program.descriptionNe : program.description}
+                          valueNe={program.descriptionNe}
+                          canEdit={isAdmin}
+                          variant="textarea"
+                          bilingual
+                          className="text-muted-foreground text-sm mb-4"
+                          onSave={(v, vNe) =>
+                            handleInlineUpdate(
+                              index,
+                              isNepali ? "descriptionNe" : "description",
+                              v,
+                              isNepali ? "description" : "descriptionNe",
+                              vNe
+                            )
+                          }
+                        />
+                        <div className="space-y-2 mt-3">
                           {(isNepali ? program.featuresNe : program.features).slice(0, 3).map((feature, fIndex) => (
                             <div key={fIndex} className="flex items-center gap-2 text-sm">
                               <CheckCircle2 className={`w-4 h-4 text-${program.color}`} />
@@ -301,48 +429,124 @@ const Programs = () => {
         </div>
       </section>
 
-      {/* Upcoming Programs */}
+      {/* Managed Programs (DB-driven) */}
       <section className="py-16 bg-muted">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-4">
-              {t("upcomingPrograms")}
-            </h2>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-12">
+            <div className="text-center sm:text-left">
+              <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-2">
+                {t("upcomingPrograms")}
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                {isNepali
+                  ? "डाटाबेसबाट व्यवस्थापित कार्यक्रमहरू"
+                  : "Database-managed programs with deadlines"}
+              </p>
+            </div>
+            {isAdmin && (
+              <Button onClick={openAdd} className="gap-2">
+                <Plus className="h-4 w-4" />
+                {isNepali ? "कार्यक्रम थप्नुहोस्" : "Add Program"}
+              </Button>
+            )}
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {upcomingPrograms.map((program, index) => (
-              <Card key={index} className="card-hover animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
-                <CardHeader>
-                  <CardTitle className="text-lg">{isNepali ? program.titleNe : program.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="w-4 h-4 text-secondary" />
-                    <span>{program.date}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <MapPin className="w-4 h-4 text-primary" />
-                    <span>{isNepali ? program.locationNe : program.location}</span>
-                  </div>
-                  <div className="text-sm text-accent font-medium">
-                    {isNepali ? program.spotsNe : program.spots}
-                  </div>
-                  <a 
-                    href={program.registerLink} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                  >
-                    <Button className="w-full mt-4 bg-secondary hover:bg-secondary/90">
-                      {isNepali ? program.ctaLabelNe : program.ctaLabel}
-                    </Button>
-                  </a>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {isLoadingDb ? (
+            <p className="text-center text-muted-foreground">
+              {isNepali ? "लोड हुँदैछ…" : "Loading…"}
+            </p>
+          ) : dbPrograms.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground mb-4">
+                {isNepali
+                  ? "अहिले कुनै कार्यक्रम छैन।"
+                  : "No programs yet."}
+              </p>
+              {isAdmin && (
+                <Button variant="outline" onClick={openAdd} className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  {isNepali ? "पहिलो कार्यक्रम थप्नुहोस्" : "Add the first program"}
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+              {dbPrograms.map((prog) => (
+                <Card
+                  key={prog.id}
+                  className="card-hover animate-fade-in-up relative group"
+                >
+                  {/* Admin action buttons */}
+                  {isAdmin && (
+                    <div className="absolute right-3 top-3 z-10 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        className="h-7 w-7"
+                        onClick={() => openEdit(prog)}
+                        title={isNepali ? "सम्पादन" : "Edit"}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="destructive"
+                        className="h-7 w-7"
+                        onClick={() => handleDelete(prog.id)}
+                        title={isNepali ? "हटाउनुहोस्" : "Delete"}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  )}
+
+                  <CardHeader>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="rounded bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                        {isNepali
+                          ? CATEGORY_LABELS[prog.category]?.ne ?? prog.category
+                          : CATEGORY_LABELS[prog.category]?.en ?? prog.category}
+                      </span>
+                    </div>
+                    <CardTitle className="text-lg">
+                      {isNepali ? prog.titleNe || prog.title : prog.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <p className="text-muted-foreground text-sm line-clamp-3">
+                      {isNepali
+                        ? prog.descriptionNe || prog.description
+                        : prog.description}
+                    </p>
+
+                    {prog.deadline && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Calendar className="h-4 w-4 text-secondary" />
+                        <span>
+                          {isNepali ? "म्याद:" : "Deadline:"}{" "}
+                          {new Date(prog.deadline).toLocaleDateString(
+                            isNepali ? "ne-NP" : "en-US",
+                            { year: "numeric", month: "long", day: "numeric" }
+                          )}
+                        </span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </section>
+
+      {/* Program Modal (Add / Edit) */}
+      <ProgramModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        initial={editTarget}
+        onSubmit={handleSubmit}
+        isSaving={isSaving}
+      />
 
       {/* CTA Section */}
       <section className="py-16 bg-gradient-to-r from-primary to-secondary">
