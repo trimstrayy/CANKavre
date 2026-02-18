@@ -5,7 +5,7 @@ export type User = {
   role?: string;
 };
 
-const BASE = process.env.VITE_AUTH_URL || 'http://localhost:4000';
+const BASE = import.meta.env.VITE_AUTH_URL || 'http://localhost:4000';
 
 async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const res = await fetch(`${BASE}${path}`, opts);
@@ -50,3 +50,147 @@ export function getToken() {
 export function clearToken() {
   localStorage.removeItem('cankavre_token');
 }
+
+// ── Program CRUD ────────────────────────────────────────────────
+
+export interface Program {
+  id: number;
+  title: string;
+  titleNe: string;
+  description: string;
+  descriptionNe: string;
+  deadline: string;
+  category: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/** Fetch all programs (public). */
+export async function getPrograms() {
+  return request<{ programs: Program[] }>('/api/programs');
+}
+
+/** Create a new program (committee-only). */
+export async function createProgram(
+  token: string,
+  data: Omit<Program, 'id' | 'createdAt' | 'updatedAt'>
+) {
+  return request<{ program: Program }>('/api/programs', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+}
+
+/** Update an existing program (committee-only). */
+export async function updateProgram(
+  token: string,
+  id: number,
+  data: Partial<Omit<Program, 'id' | 'createdAt' | 'updatedAt'>>
+) {
+  return request<{ program: Program }>(`/api/programs/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+}
+
+/** Delete a program (committee-only). */
+export async function deleteProgram(token: string, id: number) {
+  return request<{ success: boolean }>(`/api/programs/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+// ── Generic content CRUD ─────────────────────────────────────────
+
+/** Generic type for all DB content items. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyRecord = Record<string, any>;
+
+function contentApi<T extends AnyRecord>(table: string) {
+  return {
+    getAll: () => request<{ [k: string]: T[] }>(`/api/${table}`).then(r => (r as AnyRecord)[table] as T[]),
+    create: (token: string, data: Partial<T>) =>
+      request<{ item: T }>(`/api/${table}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(data),
+      }).then(r => r.item),
+    update: (token: string, id: number, data: Partial<T>) =>
+      request<{ item: T }>(`/api/${table}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(data),
+      }).then(r => r.item),
+    remove: (token: string, id: number) =>
+      request<{ success: boolean }>(`/api/${table}/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+  };
+}
+
+// ── Committee Members ────────────────────────────────────────────
+export interface CommitteeMemberRecord {
+  id: number;
+  name: string;
+  nameNe: string;
+  position: string;
+  positionNe: string;
+  contact: string;
+  photo: string;
+  sortOrder: number;
+}
+export const committeeMembersApi = contentApi<CommitteeMemberRecord>('committee_members');
+
+// ── Notices ──────────────────────────────────────────────────────
+export interface NoticeRecord {
+  id: number;
+  title: string;
+  titleNe: string;
+  content: string;
+  contentNe: string;
+  date: string;
+  priority: 'high' | 'medium' | 'low';
+  type: 'announcement' | 'deadline' | 'info';
+}
+export const noticesApi = contentApi<NoticeRecord>('notices');
+
+// ── Events ───────────────────────────────────────────────────────
+export interface EventRecord {
+  id: number;
+  title: string;
+  titleNe: string;
+  date: string;
+  time: string;
+  location: string;
+  locationNe: string;
+  description: string;
+  descriptionNe: string;
+  attendees: number;
+  status: 'upcoming' | 'ongoing' | 'completed';
+  image: string;
+}
+export const eventsApi = contentApi<EventRecord>('events');
+
+// ── Press Releases ───────────────────────────────────────────────
+export interface PressReleaseRecord {
+  id: number;
+  title: string;
+  titleNe: string;
+  excerpt: string;
+  excerptNe: string;
+  date: string;
+  category: string;
+  categoryNe: string;
+  link: string;
+}
+export const pressReleasesApi = contentApi<PressReleaseRecord>('press_releases');
