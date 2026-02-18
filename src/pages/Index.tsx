@@ -54,7 +54,7 @@ const Index = () => {
   const heroSlides = isNepali ? [
     {
       image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1920&q=80",
-      title: "७औं कार्यसमिति",
+      title: "१०औं कार्यसमिति",
       subtitle: "क्यान काभ्रेलाई डिजिटल भविष्यतर्फ अग्रसर गर्दै",
     },
     {
@@ -70,7 +70,7 @@ const Index = () => {
   ] : [
     {
       image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1920&q=80",
-      title: "7th Executive Committee",
+      title: "10th Executive Committee",
       subtitle: "Leading CAN Kavre into the Digital Future",
     },
     {
@@ -130,9 +130,9 @@ const Index = () => {
   ];
 
   const stats = [
-    { label: t("yearsActive"), value: "१५+", valueEn: "15+" },
-    { label: t("itClubs"), value: "५०+", valueEn: "50+" },
-    { label: t("members"), value: "५००+", valueEn: "500+" },
+    { label: t("yearsActive"), value: "१८+", valueEn: "18+" },
+    { label: t("itClubs"), value: "१३+", valueEn: "13+" },
+    { label: t("members"), value: "१५२+", valueEn: "152+" },
     { label: t("eventsCount"), value: "२००+", valueEn: "200+" },
   ];
 

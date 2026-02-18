@@ -111,6 +111,15 @@ export interface TranslationKeys {
   trainingsCompleted: string;
   schoolsReached: string;
   beneficiaries: string;
+  addProgram: string;
+  editProgram: string;
+  deleteProgram: string;
+  programAdded: string;
+  programUpdated: string;
+  programDeleted: string;
+  deadline: string;
+  category: string;
+  noPrograms: string;
   
   // Events Page
   eventsTitle: string;
@@ -265,7 +274,7 @@ export const translations: Record<Language, TranslationKeys> = {
     // About Page
     aboutCanKavre: "About CAN Kavre",
     ourHistory: "Our History",
-    historyText: "Computer Association of Nepal (CAN) Kavre Branch was established in 2065 B.S. as a district-level organization dedicated to promoting ICT development in Kavrepalanchok. Over the years, we have organized numerous training programs, workshops, and awareness campaigns to bridge the digital divide in our district.",
+    historyText: "Computer Association of Nepal (CAN) Federation Kavre was established in 2065 B.S. as a district-level organization dedicated to promoting ICT development in Kavrepalanchok. With 152+ members and 18 Annual General Meetings completed, including the landmark 10th Convention in 2079 B.S. that elected the current executive committee, CAN Kavre has been at the forefront of digital literacy, ICT training, and technology awareness in the district. We operate from Banepa, Kavrepalanchok and coordinate with 13 municipalities across the district.",
     currentMainCommittee: "Current Main Committee",
     viewPastCommittees: "View Past Committees",
     hidePastCommittees: "Hide Past Committees",
@@ -284,6 +293,15 @@ export const translations: Record<Language, TranslationKeys> = {
     trainingsCompleted: "Trainings Completed",
     schoolsReached: "Schools Reached",
     beneficiaries: "Beneficiaries",
+    addProgram: "Add Program",
+    editProgram: "Edit Program",
+    deleteProgram: "Delete Program",
+    programAdded: "Program Added",
+    programUpdated: "Program Updated",
+    programDeleted: "Program Deleted",
+    deadline: "Deadline",
+    category: "Category",
+    noPrograms: "No programs yet.",
     
     // Events Page
     eventsTitle: "Events",
@@ -436,7 +454,7 @@ export const translations: Record<Language, TranslationKeys> = {
     // About Page
     aboutCanKavre: "क्यान काभ्रेको बारेमा",
     ourHistory: "हाम्रो इतिहास",
-    historyText: "कम्प्युटर एसोसिएसन अफ नेपाल (क्यान) काभ्रे शाखा २०६५ बि.सं.मा काभ्रेपलाञ्चोकमा आईसीटी विकास प्रवर्द्धन गर्न समर्पित जिल्ला स्तरीय संगठनको रूपमा स्थापना भएको थियो। वर्षौंमा, हामीले हाम्रो जिल्लामा डिजिटल खाडल पूर्ति गर्न धेरै तालिम कार्यक्रमहरू, कार्यशालाहरू, र जागरूकता अभियानहरू आयोजना गरेका छौं।",
+    historyText: "कम्प्युटर एसोसिएसन अफ नेपाल (क्यान) महासंघ काभ्रे शाखा २०६५ बि.सं.मा काभ्रेपलाञ्चोकमा आईसीटी विकास प्रवर्द्धन गर्न समर्पित जिल्ला स्तरीय संगठनको रूपमा स्थापना भएको थियो। १५२+ सदस्यहरू र १८ वटा वार्षिक साधारण सभा सम्पन्न गरेको, २०७९ बि.सं.मा सम्पन्न १० औं अधिवेशनले वर्तमान कार्यसमिति निर्वाचित गरेको छ। हामी बनेपा, काभ्रेपलाञ्चोकबाट सञ्चालन गर्दछौं र जिल्लाभरका १३ पालिकाहरूसँग समन्वय गर्दछौं।",
     currentMainCommittee: "हालको मुख्य समिति",
     viewPastCommittees: "विगतका समितिहरू हेर्नुहोस्",
     hidePastCommittees: "विगतका समितिहरू लुकाउनुहोस्",
@@ -455,6 +473,15 @@ export const translations: Record<Language, TranslationKeys> = {
     trainingsCompleted: "सम्पन्न तालिमहरू",
     schoolsReached: "पुगिएका विद्यालयहरू",
     beneficiaries: "लाभान्वित",
+    addProgram: "कार्यक्रम थप्नुहोस्",
+    editProgram: "कार्यक्रम सम्पादन",
+    deleteProgram: "कार्यक्रम हटाउनुहोस्",
+    programAdded: "कार्यक्रम थपियो",
+    programUpdated: "कार्यक्रम अद्यावधिक भयो",
+    programDeleted: "कार्यक्रम हटाइयो",
+    deadline: "म्याद",
+    category: "श्रेणी",
+    noPrograms: "अहिले कुनै कार्यक्रम छैन।",
     
     // Events Page
     eventsTitle: "कार्यक्रमहरू",
