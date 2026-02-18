@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, ChevronDown, LogIn, Search } from "lucide-react";
+import { Menu, X, ChevronDown, LogIn, LogOut, Search, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,12 +12,14 @@ import { useSearch } from "@/contexts/SearchContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import SearchPanel from "@/components/SearchPanel";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useAuth } from "@/contexts/AuthContext";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const { isVisible: isSearchVisible, query, openSearch, closeSearch, performSearch } = useSearch();
-  const { t } = useLanguage();
+  const { t, isNepali } = useLanguage();
+  const { user, logout } = useAuth();
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -219,12 +221,44 @@ const Navbar = () => {
                   aria-hidden={!isSearchVisible}
                 />
               </form>
-              <Link to="/auth" className="hidden md:block">
-                <Button className="bg-primary hover:bg-primary/90">
-                  <LogIn className="w-4 h-4 mr-2" />
-                  {t("login")}
-                </Button>
-              </Link>
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="hidden md:inline-flex gap-2">
+                      <User className="w-4 h-4" />
+                      <span className="max-w-[120px] truncate text-sm">{user.fullName || user.email}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem className="text-xs text-muted-foreground" disabled>
+                      {user.role === 'committee'
+                        ? isNepali ? 'समिति सदस्य' : 'Committee'
+                        : user.role === 'subcommittee'
+                        ? isNepali ? 'उपसमिति' : 'Subcommittee'
+                        : isNepali ? 'सदस्य' : 'Member'}
+                    </DropdownMenuItem>
+                    {user.role === 'committee' && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin">{isNepali ? 'एडमिन ड्यासबोर्ड' : 'Admin Dashboard'}</Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem
+                      onClick={() => { logout(); window.location.href = '/'; }}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      {isNepali ? 'लगआउट' : 'Logout'}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link to="/auth" className="hidden md:block">
+                  <Button className="bg-primary hover:bg-primary/90">
+                    <LogIn className="w-4 h-4 mr-2" />
+                    {t("login")}
+                  </Button>
+                </Link>
+              )}
 
               {/* Mobile Menu Toggle */}
               <button
@@ -319,12 +353,39 @@ const Navbar = () => {
               </ul>
             </nav>
             <div className="mt-6 border-t border-border pt-4">
-              <Link to="/auth" className="block" onClick={() => setIsOpen(false)}>
-                <Button className="w-full bg-primary hover:bg-primary/90">
-                  <LogIn className="w-4 h-4 mr-2" />
-                  {t("memberLogin")}
-                </Button>
-              </Link>
+              {user ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 px-2 py-1">
+                    <User className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-medium truncate">{user.fullName || user.email}</span>
+                    <span className="ml-auto rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                      {user.role}
+                    </span>
+                  </div>
+                  {user.role === 'committee' && (
+                    <Link to="/admin" className="block" onClick={() => setIsOpen(false)}>
+                      <Button variant="outline" className="w-full">
+                        {isNepali ? 'एडमिन ड्यासबोर्ड' : 'Admin Dashboard'}
+                      </Button>
+                    </Link>
+                  )}
+                  <Button
+                    variant="destructive"
+                    className="w-full"
+                    onClick={() => { logout(); setIsOpen(false); window.location.href = '/'; }}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    {isNepali ? 'लगआउट' : 'Logout'}
+                  </Button>
+                </div>
+              ) : (
+                <Link to="/auth" className="block" onClick={() => setIsOpen(false)}>
+                  <Button className="w-full bg-primary hover:bg-primary/90">
+                    <LogIn className="w-4 h-4 mr-2" />
+                    {t("memberLogin")}
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>

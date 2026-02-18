@@ -22,10 +22,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { loginUser, registerUser } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AuthContent = () => {
   const { toast } = useToast();
   const { t, isNepali } = useLanguage();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
@@ -40,15 +43,29 @@ const AuthContent = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: isNepali ? "लगइन प्रयास" : "Login Attempt",
-        description: isNepali 
-          ? "यो डेमो UI-मात्र लगइन हो। वास्तविक प्रमाणीकरण सक्षम गर्न ब्याकेन्ड जडान गर्नुहोस्।"
-          : "This is a demo UI-only login. Connect a backend to enable real authentication.",
+    try {
+      const { user, token } = await loginUser({
+        email: credentials.email,
+        password: credentials.password,
       });
-    }, 1000);
+      login(token, user);
+      toast({
+        title: isNepali ? "लगइन सफल" : "Login Successful",
+        description: isNepali
+          ? `स्वागत छ, ${user.fullName || user.email}!`
+          : `Welcome, ${user.fullName || user.email}!`,
+      });
+      // Redirect to home (or admin for committee)
+      window.location.href = user.role === 'committee' ? '/programs' : '/';
+    } catch (err: any) {
+      toast({
+        title: isNepali ? "लगइन असफल" : "Login Failed",
+        description: err?.error || (isNepali ? "इमेल वा पासवर्ड गलत छ।" : "Invalid email or password."),
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -62,14 +79,30 @@ const AuthContent = () => {
       return;
     }
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({ 
-        title: isNepali ? 'दर्ता' : 'Registration', 
-        description: isNepali ? 'दर्ता सिमुलेट गरियो। आधिकारिक सदस्यताको लागि, कृपया क्यान नेपाल पोर्टल प्रयोग गर्नुहोस्।' : 'Registration simulated. For official membership, please use the CAN Nepal portal.' 
+    try {
+      const { user, token } = await registerUser({
+        fullName: credentials.fullName,
+        email: credentials.email,
+        password: credentials.password,
+        role: 'member',
       });
-      window.open('https://canfederation.org/member_registration', '_blank');
-    }, 1000);
+      login(token, user);
+      toast({
+        title: isNepali ? 'दर्ता सफल' : 'Registration Successful',
+        description: isNepali
+          ? `तपाईंको खाता सिर्जना भयो, ${user.fullName}!`
+          : `Your account has been created, ${user.fullName}!`,
+      });
+      window.location.href = '/';
+    } catch (err: any) {
+      toast({
+        title: isNepali ? 'दर्ता असफल' : 'Registration Failed',
+        description: err?.error || (isNepali ? 'दर्ता गर्न सकिएन।' : 'Could not register. Try again.'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
