@@ -261,7 +261,7 @@ const Footer = () => {
           <span className="h-2 w-full bg-green-600" />
           <span className="h-2 w-full bg-blue-600" />
         </div>
-        <div className="absolute bottom-0 z-20 container mx-auto px-4 flex justify-end">
+        <div className="absolute bottom-0 z-20 right-0 container mx-auto px-4 flex justify-end">
           <span className="inline-flex items-center bg-green-600 text-white px-5 py-1.5 rounded-full text-sm font-semibold shadow-md">
             {isNepali ? "Together We Can" : "Together We Can"}
           </span>

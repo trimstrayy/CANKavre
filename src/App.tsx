@@ -18,6 +18,9 @@ import Notice from "./pages/Notice";
 import Membership from "./pages/Membership";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
+import EventRegistration from "./pages/EventRegistration";
+import RegistrationSuccess from "./pages/RegistrationSuccess";
+import AdminScanner from "./pages/AdminScanner";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,11 +46,14 @@ const App = () => {
                     <Route path="/about" element={<About />} />
                     <Route path="/programs" element={<Programs />} />
                     <Route path="/events" element={<Events />} />
+                    <Route path="/events/:id/register" element={<EventRegistration />} />
+                    <Route path="/events/:id/register/success" element={<RegistrationSuccess />} />
                     <Route path="/downloads" element={<Downloads />} />
                     <Route path="/press-releases" element={<PressReleases />} />
                     <Route path="/notice" element={<Notice />} />
                     <Route path="/membership" element={<Membership />} />
                     <Route path="/admin" element={<Admin />} />
+                    <Route path="/admin/scan" element={<AdminScanner />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Layout>

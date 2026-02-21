@@ -1,4 +1,5 @@
 import { ChangeEvent, useRef, useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   Calendar,
   MapPin,
@@ -363,10 +364,22 @@ const Events = () => {
                       {event.attendees} {isNepali ? "सहभागी" : "attendees"}
                     </div>
                   </div>
-                  <Button className="w-full border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground" variant="outline">
-                    {isNepali ? "विवरण हेर्नुहोस्" : "View Details"}
-                    <ChevronRight className="w-4 h-4 ml-2" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button className="flex-1 border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground" variant="outline">
+                      {isNepali ? "विवरण हेर्नुहोस्" : "View Details"}
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                    {(event.status === "upcoming" || event.status === "ongoing") && (
+                      <Button
+                        asChild
+                        className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+                      >
+                        <Link to={`/events/${event.id}/register`}>
+                          {isNepali ? "दर्ता गर्नुहोस्" : "Register"}
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
