@@ -7,11 +7,12 @@ import {
   LogIn, 
   UserPlus, 
   Users,
-  Building2,
   ArrowLeft,
   ExternalLink,
   Mail,
-  Lock
+  Lock,
+  CheckCircle2,
+  RefreshCw
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import { loginUser, registerUser } from "@/lib/api";
+import { loginUser, registerUser, resendVerificationEmail } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 
 const AuthContent = () => {
@@ -33,6 +34,9 @@ const AuthContent = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   const [loginType, setLoginType] = useState<"committee" | "member">("committee");
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
+  const [devVerificationUrl, setDevVerificationUrl] = useState<string | null>(null);
   const [credentials, setCredentials] = useState({ 
     email: "", 
     password: "",
@@ -55,14 +59,24 @@ const AuthContent = () => {
           ? `स्वागत छ, ${user.fullName || user.email}!`
           : `Welcome, ${user.fullName || user.email}!`,
       });
-      // Redirect to home (or admin for committee)
       window.location.href = user.role === 'committee' ? '/programs' : '/';
     } catch (err: any) {
-      toast({
-        title: isNepali ? "लगइन असफल" : "Login Failed",
-        description: err?.error || (isNepali ? "इमेल वा पासवर्ड गलत छ।" : "Invalid email or password."),
-        variant: "destructive",
-      });
+      // Check if email not verified
+      if (err?.code === 'EMAIL_NOT_VERIFIED') {
+        toast({
+          title: isNepali ? "इमेल प्रमाणित छैन" : "Email Not Verified",
+          description: isNepali 
+            ? "कृपया लगइन गर्नु अघि आफ्नो इमेल प्रमाणित गर्नुहोस्।"
+            : "Please verify your email before logging in. Check your inbox.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: isNepali ? "लगइन असफल" : "Login Failed",
+          description: err?.error || (isNepali ? "इमेल वा पासवर्ड गलत छ।" : "Invalid email or password."),
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -80,24 +94,61 @@ const AuthContent = () => {
     }
     setIsLoading(true);
     try {
-      const { user, token } = await registerUser({
+      const result = await registerUser({
         fullName: credentials.fullName,
         email: credentials.email,
         password: credentials.password,
         role: 'member',
+        language: isNepali ? 'ne' : 'en',
       });
-      login(token, user);
+      
+      setRegisteredEmail(result.email);
+      setRegistrationSuccess(true);
+      
+      // Show dev verification URL if email not configured
+      if (result.verificationUrl) {
+        setDevVerificationUrl(result.verificationUrl);
+      }
+      
       toast({
         title: isNepali ? 'दर्ता सफल' : 'Registration Successful',
         description: isNepali
-          ? `तपाईंको खाता सिर्जना भयो, ${user.fullName}!`
-          : `Your account has been created, ${user.fullName}!`,
+          ? 'प्रमाणीकरण लिंकको लागि आफ्नो इमेल जाँच गर्नुहोस्।'
+          : 'Check your email for the verification link.',
       });
-      window.location.href = '/';
     } catch (err: any) {
       toast({
         title: isNepali ? 'दर्ता असफल' : 'Registration Failed',
         description: err?.error || (isNepali ? 'दर्ता गर्न सकिएन।' : 'Could not register. Try again.'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setIsLoading(true);
+    try {
+      const result = await resendVerificationEmail({
+        email: credentials.email || registeredEmail.replace(/\*+/g, ''),
+        language: isNepali ? 'ne' : 'en',
+      });
+      
+      if (result.verificationUrl) {
+        setDevVerificationUrl(result.verificationUrl);
+      }
+      
+      toast({
+        title: isNepali ? 'इमेल पठाइयो' : 'Email Sent',
+        description: isNepali 
+          ? 'प्रमाणीकरण इमेल पुन: पठाइएको छ।'
+          : 'Verification email has been resent.',
+      });
+    } catch (err: any) {
+      toast({
+        title: isNepali ? 'त्रुटि' : 'Error',
+        description: err?.error || (isNepali ? 'इमेल पठाउन सकिएन।' : 'Could not send email.'),
         variant: 'destructive',
       });
     } finally {
@@ -351,6 +402,76 @@ const AuthContent = () => {
 
                     {/* Register Tab */}
                     <TabsContent value="register" className="space-y-6">
+                      {registrationSuccess ? (
+                        <div className="text-center space-y-6 py-8">
+                          <div className="w-20 h-20 mx-auto bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                            <Mail className="w-10 h-10 text-green-600 dark:text-green-400" />
+                          </div>
+                          <div className="space-y-2">
+                            <h3 className="text-xl font-semibold">
+                              {isNepali ? "इमेल प्रमाणित गर्नुहोस्" : "Verify Your Email"}
+                            </h3>
+                            <p className="text-muted-foreground">
+                              {isNepali 
+                                ? `हामीले ${registeredEmail} मा एउटा प्रमाणिकरण लिंक पठाएका छौं। कृपया आफ्नो इनबक्स जाँच गर्नुहोस् र आफ्नो खाता सक्रिय गर्न लिंकमा क्लिक गर्नुहोस्।`
+                                : `We've sent a verification link to ${registeredEmail}. Please check your inbox and click the link to activate your account.`
+                              }
+                            </p>
+                          </div>
+                          
+                          {/* Dev verification URL for testing */}
+                          {devVerificationUrl && (
+                            <div className="bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 rounded-lg p-4 text-left">
+                              <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                                🔧 Dev Mode - Verification Link:
+                              </p>
+                              <a 
+                                href={devVerificationUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-sm text-blue-600 dark:text-blue-400 hover:underline break-all"
+                              >
+                                {devVerificationUrl}
+                              </a>
+                            </div>
+                          )}
+
+                          <div className="space-y-3">
+                            <p className="text-sm text-muted-foreground">
+                              {isNepali ? "इमेल प्राप्त भएन?" : "Didn't receive the email?"}
+                            </p>
+                            <Button
+                              variant="outline"
+                              onClick={handleResendVerification}
+                              disabled={isLoading}
+                            >
+                              {isLoading ? (
+                                <span className="flex items-center gap-2">
+                                  <span className="w-4 h-4 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" />
+                                  {isNepali ? "पठाउँदै..." : "Sending..."}
+                                </span>
+                              ) : (
+                                isNepali ? "प्रमाणिकरण इमेल पुनः पठाउनुहोस्" : "Resend Verification Email"
+                              )}
+                            </Button>
+                          </div>
+
+                          <div className="pt-4 border-t">
+                            <Button
+                              variant="ghost"
+                              onClick={() => {
+                                setRegistrationSuccess(false);
+                                setRegisteredEmail("");
+                                setDevVerificationUrl("");
+                                setActiveTab("login");
+                              }}
+                            >
+                              {isNepali ? "लगइनमा जानुहोस्" : "Go to Login"}
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
                       <div className="bg-accent/10 border border-accent/30 rounded-lg p-4 text-center">
                         <p className="text-sm text-foreground">
                           <strong>{isNepali ? "नोट:" : "Note:"}</strong> {isNepali 
@@ -462,6 +583,8 @@ const AuthContent = () => {
                           {isNepali ? "क्यान नेपाल आधिकारिक पोर्टलमा दर्ता गर्नुहोस्" : "Register at CAN Nepal Official Portal"}
                         </Button>
                       </a>
+                        </>
+                      )}
                     </TabsContent>
                   </Tabs>
                 </CardContent>

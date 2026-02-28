@@ -16,14 +16,51 @@ async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
   return res.json();
 }
 
-export async function registerUser(data: { fullName?: string; email: string; password: string; role?: string }) {
-  return request<{ user: User; token: string }>('/api/register', {
+// Register - creates account and sends verification email
+export async function registerUser(data: { 
+  fullName?: string; 
+  email: string; 
+  password: string; 
+  role?: string;
+  language?: string;
+}) {
+  return request<{ 
+    success: boolean; 
+    message: string; 
+    email: string;
+    verificationUrl?: string; // Only in dev mode
+  }>('/api/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
 }
 
+// Verify email with token (called when user clicks verification link)
+export async function verifyEmail(token: string) {
+  return request<{ 
+    success: boolean; 
+    message: string; 
+    email: string;
+  }>(`/api/verify-email/${token}`, {
+    method: 'GET',
+  });
+}
+
+// Resend verification email
+export async function resendVerificationEmail(data: { email: string; language?: string }) {
+  return request<{ 
+    success: boolean; 
+    message: string;
+    verificationUrl?: string; // Only in dev mode
+  }>('/api/resend-verification', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+}
+
+// Login - only works for verified accounts
 export async function loginUser(data: { email: string; password: string }) {
   return request<{ user: User; token: string }>('/api/login', {
     method: 'POST',

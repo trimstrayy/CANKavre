@@ -1,44 +1,173 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('./db');
 const { authMiddleware, requireRole, SECRET } = require('./auth');
+const { generateVerificationToken, sendVerificationEmail, FRONTEND_URL } = require('./email');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 4000;
+const TOKEN_EXPIRY_HOURS = 24;
 
-// Register
+// Register - creates unverified account and sends verification email
 app.post('/api/register', async (req, res) => {
-  const { fullName, email, password, role } = req.body;
+  const { fullName, email, password, role, language } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+  
   const hashed = await bcrypt.hash(password, 10);
-  const stmt = db.prepare('INSERT INTO users (fullName, email, password, role) VALUES (?, ?, ?, ?)');
-  stmt.run(fullName || null, email, hashed, role || 'member', function (err) {
+  const stmt = db.prepare('INSERT INTO users (fullName, email, password, role, emailVerified) VALUES (?, ?, ?, ?, 0)');
+  
+  stmt.run(fullName || null, email, hashed, role || 'member', async function (err) {
     if (err) {
-      if (err.message && err.message.includes('UNIQUE')) return res.status(409).json({ error: 'Email already registered' });
+      if (err.message && err.message.includes('UNIQUE')) {
+        return res.status(409).json({ error: 'Email already registered' });
+      }
       console.error(err);
       return res.status(500).json({ error: 'DB error' });
     }
-    const user = { id: this.lastID, fullName, email, role: role || 'member' };
-    const token = jwt.sign(user, SECRET, { expiresIn: '7d' });
-    res.json({ user, token });
+    
+    const userId = this.lastID;
+    
+    // Generate verification token
+    const token = generateVerificationToken();
+    const expiresAt = new Date(Date.now() + TOKEN_EXPIRY_HOURS * 60 * 60 * 1000).toISOString();
+    
+    // Store verification token
+    const tokenStmt = db.prepare(
+      'INSERT INTO verification_tokens (userId, email, token, expiresAt) VALUES (?, ?, ?, ?)'
+    );
+    
+    tokenStmt.run(userId, email, token, expiresAt, async function(tokenErr) {
+      if (tokenErr) {
+        console.error(tokenErr);
+        return res.status(500).json({ error: 'Failed to create verification token' });
+      }
+      
+      try {
+        const emailResult = await sendVerificationEmail(email, token, fullName, language || 'en');
+        res.json({ 
+          success: true, 
+          message: 'Registration successful! Please check your email to verify your account.',
+          email: email.replace(/(.{2})(.*)(@.*)/, '$1***$3'),
+          // Include verification URL in dev mode (when email not configured)
+          ...(emailResult.mock ? { verificationUrl: emailResult.verificationUrl } : {})
+        });
+      } catch (emailErr) {
+        console.error(emailErr);
+        // Still return success but warn about email
+        res.json({ 
+          success: true, 
+          message: 'Account created but verification email could not be sent. Please contact support.',
+          email: email.replace(/(.{2})(.*)(@.*)/, '$1***$3')
+        });
+      }
+    });
+    tokenStmt.finalize && tokenStmt.finalize();
   });
   stmt.finalize && stmt.finalize();
 });
 
-// Login
+// Verify email with token
+app.get('/api/verify-email/:token', (req, res) => {
+  const { token } = req.params;
+  
+  db.get(
+    `SELECT vt.*, u.id as userId, u.email as userEmail 
+     FROM verification_tokens vt 
+     JOIN users u ON vt.userId = u.id 
+     WHERE vt.token = ? AND vt.used = 0 AND vt.expiresAt > datetime('now')`,
+    [token],
+    (err, row) => {
+      if (err) return res.status(500).json({ error: 'DB error' });
+      if (!row) return res.status(400).json({ error: 'Invalid or expired verification link' });
+      
+      // Mark token as used
+      db.run('UPDATE verification_tokens SET used = 1 WHERE id = ?', [row.id]);
+      
+      // Mark email as verified
+      db.run('UPDATE users SET emailVerified = 1 WHERE id = ?', [row.userId], (updateErr) => {
+        if (updateErr) {
+          console.error(updateErr);
+          return res.status(500).json({ error: 'Failed to verify email' });
+        }
+        
+        res.json({ 
+          success: true, 
+          message: 'Email verified successfully! You can now log in.',
+          email: row.userEmail
+        });
+      });
+    }
+  );
+});
+
+// Resend verification email
+app.post('/api/resend-verification', (req, res) => {
+  const { email, language } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email required' });
+  
+  db.get('SELECT * FROM users WHERE email = ? AND emailVerified = 0', [email], async (err, row) => {
+    if (err) return res.status(500).json({ error: 'DB error' });
+    if (!row) return res.status(400).json({ error: 'Email not found or already verified' });
+    
+    // Invalidate existing tokens
+    db.run('UPDATE verification_tokens SET used = 1 WHERE userId = ? AND used = 0', [row.id]);
+    
+    // Generate new token
+    const token = generateVerificationToken();
+    const expiresAt = new Date(Date.now() + TOKEN_EXPIRY_HOURS * 60 * 60 * 1000).toISOString();
+    
+    const stmt = db.prepare(
+      'INSERT INTO verification_tokens (userId, email, token, expiresAt) VALUES (?, ?, ?, ?)'
+    );
+    
+    stmt.run(row.id, email, token, expiresAt, async function(insertErr) {
+      if (insertErr) {
+        console.error(insertErr);
+        return res.status(500).json({ error: 'Failed to generate verification token' });
+      }
+      
+      try {
+        const emailResult = await sendVerificationEmail(email, token, row.fullName, language || 'en');
+        res.json({ 
+          success: true, 
+          message: 'Verification email resent',
+          ...(emailResult.mock ? { verificationUrl: emailResult.verificationUrl } : {})
+        });
+      } catch (emailErr) {
+        res.status(500).json({ error: 'Failed to send verification email' });
+      }
+    });
+    stmt.finalize && stmt.finalize();
+  });
+});
+
+// Login - only allows verified accounts
 app.post('/api/login', (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+  
   db.get('SELECT * FROM users WHERE email = ?', [email], async (err, row) => {
     if (err) return res.status(500).json({ error: 'DB error' });
     if (!row) return res.status(401).json({ error: 'Invalid credentials' });
+    
     const ok = await bcrypt.compare(password, row.password);
     if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
+    
+    // Check if email is verified
+    if (!row.emailVerified) {
+      return res.status(403).json({ 
+        error: 'Email not verified', 
+        code: 'EMAIL_NOT_VERIFIED',
+        message: 'Please verify your email before logging in. Check your inbox for the verification link.'
+      });
+    }
+    
     const user = { id: row.id, fullName: row.fullName, email: row.email, role: row.role };
     const token = jwt.sign(user, SECRET, { expiresIn: '7d' });
     res.json({ user, token });

@@ -18,9 +18,15 @@ db.serialize(() => {
       email TEXT UNIQUE,
       password TEXT,
       role TEXT,
+      emailVerified INTEGER DEFAULT 0,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Add emailVerified column if it doesn't exist (migration for existing DBs)
+  db.run(`ALTER TABLE users ADD COLUMN emailVerified INTEGER DEFAULT 0`, (err) => {
+    // Ignore error if column already exists
+  });
 
   db.run(`
     CREATE TABLE IF NOT EXISTS programs (
@@ -96,6 +102,23 @@ db.serialize(() => {
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Email verification tokens table (for registration verification links)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS verification_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      userId INTEGER NOT NULL,
+      email TEXT NOT NULL,
+      token TEXT NOT NULL UNIQUE,
+      expiresAt DATETIME NOT NULL,
+      used INTEGER DEFAULT 0,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (userId) REFERENCES users(id)
+    )
+  `);
+
+  // Clean up expired tokens periodically
+  db.run(`DELETE FROM verification_tokens WHERE expiresAt < datetime('now') OR used = 1`);
 });
 
 module.exports = db;

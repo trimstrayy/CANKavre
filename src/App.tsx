@@ -18,6 +18,7 @@ import Notice from "./pages/Notice";
 import Membership from "./pages/Membership";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
+import VerifyEmail from "./pages/VerifyEmail";
 import EventRegistration from "./pages/EventRegistration";
 import RegistrationSuccess from "./pages/RegistrationSuccess";
 import AdminScanner from "./pages/AdminScanner";
@@ -39,6 +40,7 @@ const App = () => {
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="*" element={
                 <Layout>
                   <Routes>
