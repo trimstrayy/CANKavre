@@ -1,3 +1,39 @@
+// POST /api/programs/register — public, user registration for a program
+app.post('/api/programs/register', async (req, res) => {
+  const { name, email, location, programId, language } = req.body;
+  if (!name || !email || !programId) return res.status(400).json({ error: 'Missing required fields' });
+
+  // Get program info
+  db.get('SELECT * FROM programs WHERE id = ?', [programId], (err, program) => {
+    if (err || !program) return res.status(404).json({ error: 'Program not found' });
+
+    // Save registration (create table if needed)
+    db.run(
+      'CREATE TABLE IF NOT EXISTS program_registrations (id INTEGER PRIMARY KEY AUTOINCREMENT, programId INTEGER, name TEXT, email TEXT, location TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)',
+      [],
+      () => {
+        const stmt = db.prepare('INSERT INTO program_registrations (programId, name, email, location) VALUES (?, ?, ?, ?)');
+        stmt.run(programId, name, email, location || '', function (regErr) {
+          if (regErr) {
+            console.error(regErr);
+            return res.status(500).json({ error: 'Failed to register' });
+          }
+          // Send confirmation email
+          const { sendProgramRegistrationEmail } = require('./email');
+          sendProgramRegistrationEmail(email, program, name, language || 'en')
+            .then(() => {
+              res.json({ success: true, message: 'Registered and confirmation email sent.' });
+            })
+            .catch(emailErr => {
+              console.error(emailErr);
+              res.json({ success: true, message: 'Registered, but failed to send confirmation email.' });
+            });
+        });
+        stmt.finalize && stmt.finalize();
+      }
+    );
+  });
+});
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');

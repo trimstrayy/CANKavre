@@ -179,9 +179,117 @@ async function sendVerificationEmail(email, token, userName, language = 'en') {
   }
 }
 
+// Program registration confirmation email template
+function getProgramRegistrationEmailTemplate(program, userName, language = 'en') {
+  const isNepali = language === 'ne';
+  return `
+<!DOCTYPE html>
+<html lang="${isNepali ? 'ne' : 'en'}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${isNepali ? 'कार्यक्रम दर्ता पुष्टिकरण' : 'Program Registration Confirmation'}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f5;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td align="center" style="padding: 40px 0;">
+        <table role="presentation" style="width: 100%; max-width: 600px; border-collapse: collapse; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <tr>
+            <td style="background: linear-gradient(135deg, #1e40af 0%, #7c3aed 50%, #06b6d4 100%); padding: 32px; border-radius: 16px 16px 0 0; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">
+                CAN Kavre
+              </h1>
+              <p style="margin: 8px 0 0 0; color: rgba(255, 255, 255, 0.9); font-size: 14px;">
+                Computer Association of Nepal - Kavrepalanchok
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 40px 32px;">
+              <h2 style="margin: 0 0 16px 0; color: #1f2937; font-size: 24px; font-weight: 600;">
+                ${isNepali ? 'दर्ता सफल भयो' : 'Registration Successful'}${userName ? `, ${userName}` : ''}!
+              </h2>
+              <p style="margin: 0 0 24px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                ${isNepali
+                  ? `तपाईंले "${program.titleNe || program.title}" कार्यक्रममा सफलतापूर्वक दर्ता गर्नुभयो।`
+                  : `You have successfully registered for the program "${program.title}".`}
+              </p>
+              <div style="margin: 24px 0; color: #6b7280; font-size: 15px;">
+                <strong>${isNepali ? 'कार्यक्रम विवरण:' : 'Program Details:'}</strong><br>
+                ${isNepali ? program.descriptionNe || program.description : program.description}
+              </div>
+              <div style="background-color: #f3f4f6; padding: 12px; border-radius: 8px; word-break: break-all; margin: 24px 0;">
+                <strong>${isNepali ? 'म्याद:' : 'Deadline:'}</strong> ${program.deadline}
+              </div>
+              <p style="margin: 24px 0 0 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
+                ${isNepali
+                  ? 'धन्यवाद! थप जानकारीका लागि सम्पर्क गर्नुहोस्।'
+                  : 'Thank you! For more information, please contact us.'}
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #f9fafb; padding: 24px 32px; border-radius: 0 0 16px 16px; border-top: 1px solid #e5e7eb;">
+              <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="text-align: center;">
+                    <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 14px;">
+                      CAN Kavre, Kavrepalanchok, Nepal
+                    </p>
+                    <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                      &copy; ${new Date().getFullYear()} Computer Association of Nepal - Kavre Chapter
+                    </p>
+                    <p style="margin: 8px 0 0 0;">
+                      <a href="mailto:cankavre@gmail.com" style="color: #7c3aed; text-decoration: none; font-size: 12px;">cankavre@gmail.com</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+        <p style="margin: 24px 0 0 0; color: #9ca3af; font-size: 11px; text-align: center;">
+          ${isNepali ? 'यो इमेल तपाईंले कार्यक्रम दर्ता गर्दा पठाइएको हो।' : 'This email was sent because you registered for a program.'}
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`;
+}
+
+// Send program registration confirmation email
+async function sendProgramRegistrationEmail(email, program, userName, language = 'en') {
+  const isNepali = language === 'ne';
+  if (!EMAIL_USER || !EMAIL_PASS) {
+    console.log('⚠️  Email not configured. Registration confirmation for:', program.title);
+    return { success: true, mock: true };
+  }
+  const mailOptions = {
+    from: EMAIL_FROM,
+    to: email,
+    subject: isNepali
+      ? `${program.titleNe || program.title} कार्यक्रममा दर्ता पुष्टिकरण`
+      : `Registration Confirmation for ${program.title}`,
+    html: getProgramRegistrationEmailTemplate(program, userName, language),
+  };
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Registration confirmation email sent to ${email}`);
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Failed to send registration confirmation email:', error.message);
+    throw new Error('Failed to send registration confirmation email');
+  }
+}
+
 module.exports = {
   generateVerificationToken,
   sendVerificationEmail,
   getVerificationLinkEmailTemplate,
+  sendProgramRegistrationEmail,
+  getProgramRegistrationEmailTemplate,
   FRONTEND_URL,
 };
