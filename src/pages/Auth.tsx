@@ -33,7 +33,7 @@ const AuthContent = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
-  const [loginType, setLoginType] = useState<"committee" | "member">("committee");
+  // Only committee login allowed
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [devVerificationUrl, setDevVerificationUrl] = useState<string | null>(null);
@@ -282,46 +282,13 @@ const AuthContent = () => {
 
                     {/* Login Tab */}
                     <TabsContent value="login" className="space-y-6">
-                      {/* Login Type Selection */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setLoginType("committee")}
-                          className={`p-4 rounded-xl border-2 transition-all ${
-                            loginType === "committee" 
-                              ? "border-primary bg-primary/5" 
-                              : "border-border hover:border-primary/50"
-                          }`}
-                        >
-                          <Users className={`w-8 h-8 mx-auto mb-2 ${
-                            loginType === "committee" ? "text-primary" : "text-muted-foreground"
-                          }`} />
-                          <span className={`font-medium block ${
-                            loginType === "committee" ? "text-primary" : "text-foreground"
-                          }`}>{isNepali ? "समिति" : "Committee"}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {isNepali ? "पूर्ण पहुँच" : "Full Access"}
-                          </span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setLoginType("member")}
-                          className={`p-4 rounded-xl border-2 transition-all ${
-                            loginType === "member" 
-                              ? "border-secondary bg-secondary/5" 
-                              : "border-border hover:border-secondary/50"
-                          }`}
-                        >
-                          <Users className={`w-8 h-8 mx-auto mb-2 ${
-                            loginType === "member" ? "text-secondary" : "text-muted-foreground"
-                          }`} />
-                          <span className={`font-medium block ${
-                            loginType === "member" ? "text-secondary" : "text-foreground"
-                          }`}>{isNepali ? "सदस्य" : "Member"}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {isNepali ? "सेवा प्राप्तकर्ता" : "Service Receiver"}
-                          </span>
-                        </button>
+                      {/* Only committee login allowed */}
+                      <div className="mb-4">
+                        <div className="p-4 rounded-xl border-2 border-primary bg-primary/5">
+                          <Users className="w-8 h-8 mx-auto mb-2 text-primary" />
+                          <span className="font-medium block text-primary">{isNepali ? "समिति" : "Committee"}</span>
+                          <span className="text-xs text-muted-foreground">{isNepali ? "पूर्ण पहुँच" : "Full Access"}</span>
+                        </div>
                       </div>
 
                       <form onSubmit={handleLogin} className="space-y-4">
@@ -374,12 +341,8 @@ const AuthContent = () => {
                         </div>
 
                         <Button 
-                          type="submit" 
-                          className={`w-full ${
-                            loginType === "committee" 
-                              ? "bg-primary hover:bg-primary/90" 
-                              : "bg-secondary hover:bg-secondary/90"
-                          }`}
+                          type="submit"
+                          className="w-full bg-primary hover:bg-primary/90"
                           disabled={isLoading}
                         >
                           {isLoading ? (
@@ -390,10 +353,7 @@ const AuthContent = () => {
                           ) : (
                             <>
                               <LogIn className="w-4 h-4 mr-2" />
-                              {isNepali 
-                                ? `${loginType === "committee" ? "समिति" : "सदस्य"}को रूपमा साइन इन गर्नुहोस्`
-                                : `Sign In as ${loginType === "committee" ? "Committee" : "Member"}`
-                              }
+                              {isNepali ? "समिति रूपमा साइन इन गर्नुहोस्" : "Sign In as Committee"}
                             </>
                           )}
                         </Button>

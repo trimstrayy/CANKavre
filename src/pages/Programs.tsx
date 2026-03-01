@@ -35,6 +35,9 @@ import {
   updateProgram,
   deleteProgram,
 } from "@/lib/api";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const iconMap = {
   laptop: Laptop,
@@ -280,6 +283,22 @@ const Programs = () => {
         ? "स्थानीय परिवर्तन सेभ भयो। (नोट: दुवै EN/NE अपडेट गर्नुहोस्)"
         : "Local change saved. (Note: update both EN/NE for bilingual sync)",
     });
+  };
+
+  const [registerModalOpen, setRegisterModalOpen] = useState(false);
+  const [registerTarget, setRegisterTarget] = useState<Program | null>(null);
+  const [registerForm, setRegisterForm] = useState({ name: "", email: "", location: "" });
+
+  const openRegister = (prog: Program) => {
+    setRegisterTarget(prog);
+    setRegisterModalOpen(true);
+  };
+
+  const handleRegisterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Send registration data to backend
+    setRegisterModalOpen(false);
+    toast({ title: "Registered!", description: "You have registered for the program." });
   };
 
   return (
@@ -531,6 +550,9 @@ const Programs = () => {
                         </span>
                       </div>
                     )}
+                    <Button className="mt-2 w-full" onClick={() => openRegister(prog)}>
+                      {isNepali ? "दर्ता गर्नुहोस्" : "Register"}
+                    </Button>
                   </CardContent>
                 </Card>
               ))}
@@ -547,6 +569,33 @@ const Programs = () => {
         onSubmit={handleSubmit}
         isSaving={isSaving}
       />
+
+      {/* Register Modal */}
+      <Dialog open={registerModalOpen} onOpenChange={setRegisterModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{isNepali ? "कार्यक्रम दर्ता" : "Program Registration"}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleRegisterSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="name">{isNepali ? "नाम" : "Name"}</Label>
+              <Input id="name" value={registerForm.name} onChange={e => setRegisterForm({ ...registerForm, name: e.target.value })} required />
+            </div>
+            <div>
+              <Label htmlFor="email">{isNepali ? "इमेल" : "Email"}</Label>
+              <Input id="email" type="email" value={registerForm.email} onChange={e => setRegisterForm({ ...registerForm, email: e.target.value })} required />
+            </div>
+            <div>
+              <Label htmlFor="location">{isNepali ? "स्थान" : "Location"}</Label>
+              <Input id="location" value={registerForm.location} onChange={e => setRegisterForm({ ...registerForm, location: e.target.value })} required />
+            </div>
+            {/* Dynamic fields for admin can be added here */}
+            <DialogFooter>
+              <Button type="submit">{isNepali ? "पेश गर्नुहोस्" : "Submit"}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* CTA Section */}
       <section className="py-16 bg-gradient-to-r from-primary to-secondary">
