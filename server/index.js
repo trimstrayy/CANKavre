@@ -1,44 +1,10 @@
-// POST /api/programs/register — public, user registration for a program
-app.post('/api/programs/register', async (req, res) => {
-  const { name, email, location, programId, language } = req.body;
-  if (!name || !email || !programId) return res.status(400).json({ error: 'Missing required fields' });
-
-  // Get program info
-  db.get('SELECT * FROM programs WHERE id = ?', [programId], (err, program) => {
-    if (err || !program) return res.status(404).json({ error: 'Program not found' });
-
-    // Save registration (create table if needed)
-    db.run(
-      'CREATE TABLE IF NOT EXISTS program_registrations (id INTEGER PRIMARY KEY AUTOINCREMENT, programId INTEGER, name TEXT, email TEXT, location TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)',
-      [],
-      () => {
-        const stmt = db.prepare('INSERT INTO program_registrations (programId, name, email, location) VALUES (?, ?, ?, ?)');
-        stmt.run(programId, name, email, location || '', function (regErr) {
-          if (regErr) {
-            console.error(regErr);
-            return res.status(500).json({ error: 'Failed to register' });
-          }
-          // Send confirmation email
-          const { sendProgramRegistrationEmail } = require('./email');
-          sendProgramRegistrationEmail(email, program, name, language || 'en')
-            .then(() => {
-              res.json({ success: true, message: 'Registered and confirmation email sent.' });
-            })
-            .catch(emailErr => {
-              console.error(emailErr);
-              res.json({ success: true, message: 'Registered, but failed to send confirmation email.' });
-            });
-        });
-        stmt.finalize && stmt.finalize();
-      }
-    );
-  });
-});
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const QRCode = require('qrcode');
 const db = require('./db');
 const { authMiddleware, requireRole, SECRET } = require('./auth');
 const { generateVerificationToken, sendVerificationEmail, FRONTEND_URL } = require('./email');
@@ -49,6 +15,27 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 4000;
 const TOKEN_EXPIRY_HOURS = 24;
+
+// ── Ensure program_registrations table has all required columns ──
+db.run(`CREATE TABLE IF NOT EXISTS program_registrations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  programId INTEGER,
+  name TEXT,
+  email TEXT,
+  location TEXT,
+  registrationCode TEXT UNIQUE,
+  isAttended INTEGER DEFAULT 0,
+  attendedAt DATETIME,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+)`, () => {
+  // Add columns to existing tables that may pre-date this schema
+  const migrations = [
+    'ALTER TABLE program_registrations ADD COLUMN registrationCode TEXT',
+    'ALTER TABLE program_registrations ADD COLUMN isAttended INTEGER DEFAULT 0',
+    'ALTER TABLE program_registrations ADD COLUMN attendedAt DATETIME',
+  ];
+  migrations.forEach(sql => db.run(sql, () => {})); // Errors are safe to ignore (column already exists)
+});
 
 // Register - creates unverified account and sends verification email
 app.post('/api/register', async (req, res) => {
@@ -327,6 +314,102 @@ app.delete('/api/programs/:id', authMiddleware, requireRole('committee'), (req, 
     if (this.changes === 0) return res.status(404).json({ error: 'Program not found' });
     res.json({ success: true });
   });
+});
+
+// POST /api/programs/register — public, user registration for a program
+app.post('/api/programs/register', async (req, res) => {
+  const { name, email, location, programId, language } = req.body;
+  if (!name || !email || !programId) return res.status(400).json({ error: 'Missing required fields' });
+
+  db.get('SELECT * FROM programs WHERE id = ?', [programId], async (err, program) => {
+    if (err || !program) return res.status(404).json({ error: 'Program not found' });
+
+    // Check for duplicate registration
+    db.get('SELECT id FROM program_registrations WHERE programId = ? AND email = ?', [programId, email], async (dupErr, existing) => {
+      if (existing) return res.status(409).json({ error: 'This email is already registered for this program.' });
+
+      // Generate unique registration code
+      const registrationCode = `PRG-${new Date().getFullYear()}-${programId}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+
+      // Generate QR code as PNG buffer
+      let qrBuffer;
+      try {
+        qrBuffer = await QRCode.toBuffer(registrationCode, { type: 'png', width: 300, margin: 2 });
+      } catch (qrErr) {
+        console.error('QR generation failed:', qrErr.message);
+        return res.status(500).json({ error: 'Failed to generate QR code' });
+      }
+
+      const stmt = db.prepare(
+        'INSERT INTO program_registrations (programId, name, email, location, registrationCode) VALUES (?, ?, ?, ?, ?)'
+      );
+      stmt.run(programId, name, email, location || '', registrationCode, function (regErr) {
+        if (regErr) {
+          console.error(regErr);
+          return res.status(500).json({ error: 'Failed to register' });
+        }
+        const { sendProgramRegistrationEmail } = require('./email');
+        sendProgramRegistrationEmail(email, program, name, language || 'en', qrBuffer, registrationCode)
+          .then(() => res.json({ success: true, message: 'Registered and confirmation email sent.', registrationCode }))
+          .catch(emailErr => {
+            console.error(emailErr);
+            res.json({ success: true, message: 'Registered, but failed to send confirmation email.', registrationCode });
+          });
+      });
+      stmt.finalize && stmt.finalize();
+    });
+  });
+});
+
+// POST /api/programs/checkin — committee only, scan QR and mark attendance
+app.post('/api/programs/checkin', authMiddleware, requireRole('committee'), (req, res) => {
+  const { registrationCode } = req.body;
+  if (!registrationCode) return res.status(400).json({ error: 'Registration code required' });
+
+  db.get('SELECT * FROM program_registrations WHERE registrationCode = ?', [registrationCode], (err, reg) => {
+    if (err) return res.status(500).json({ error: 'DB error' });
+    if (!reg) {
+      return res.json({ success: false, status: 'invalid', message: 'Invalid QR code — registration not found.' });
+    }
+    if (reg.isAttended) {
+      return res.json({
+        success: false,
+        status: 'duplicate',
+        message: `${reg.name} has already checked in at ${new Date(reg.attendedAt).toLocaleString()}.`,
+        attendee: { name: reg.name, email: reg.email, registrationCode: reg.registrationCode },
+      });
+    }
+
+    const now = new Date().toISOString();
+    db.run(
+      'UPDATE program_registrations SET isAttended = 1, attendedAt = ? WHERE registrationCode = ?',
+      [now, registrationCode],
+      function (updateErr) {
+        if (updateErr) return res.status(500).json({ error: 'Failed to mark attendance' });
+        db.get('SELECT * FROM programs WHERE id = ?', [reg.programId], (pErr, program) => {
+          res.json({
+            success: true,
+            status: 'success',
+            message: `${reg.name} checked in successfully.`,
+            attendee: { name: reg.name, email: reg.email, registrationCode: reg.registrationCode },
+            program: program ? { id: program.id, title: program.title } : null,
+          });
+        });
+      }
+    );
+  });
+});
+
+// GET /api/programs/registrations/:programId — committee only, list all registrants
+app.get('/api/programs/registrations/:programId', authMiddleware, requireRole('committee'), (req, res) => {
+  db.all(
+    'SELECT * FROM program_registrations WHERE programId = ? ORDER BY createdAt DESC',
+    [req.params.programId],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: 'DB error' });
+      res.json({ registrations: rows || [] });
+    }
+  );
 });
 
 // ────────────────────────────────────────────────────────────────
