@@ -146,6 +146,36 @@ export async function deleteProgram(token: string, id: number) {
   });
 }
 
+/** Register for a program (public). Saves to DB and sends confirmation email. */
+export async function registerForProgram(data: {
+  programId: number;
+  name: string;
+  email: string;
+  location?: string;
+  language?: string;
+}) {
+  return request<{ success: boolean; message: string; registrationCode?: string }>('/api/programs/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+}
+
+/** Check in a program attendee by QR code scan (committee only). */
+export async function checkInProgram(token: string, registrationCode: string) {
+  return request<{
+    success: boolean;
+    status: 'success' | 'duplicate' | 'invalid' | 'error';
+    message: string;
+    attendee?: { name: string; email: string; registrationCode: string };
+    program?: { id: number; title: string };
+  }>('/api/programs/checkin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ registrationCode }),
+  });
+}
+
 // ── Generic content CRUD ─────────────────────────────────────────
 
 /** Generic type for all DB content items. */
