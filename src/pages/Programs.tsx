@@ -34,6 +34,7 @@ import {
   createProgram,
   updateProgram,
   deleteProgram,
+  registerForProgram,
 } from "@/lib/api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -288,17 +289,45 @@ const Programs = () => {
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [registerTarget, setRegisterTarget] = useState<Program | null>(null);
   const [registerForm, setRegisterForm] = useState({ name: "", email: "", location: "" });
+  const [isSubmittingReg, setIsSubmittingReg] = useState(false);
 
   const openRegister = (prog: Program) => {
     setRegisterTarget(prog);
+    setRegisterForm({ name: "", email: "", location: "" });
     setRegisterModalOpen(true);
   };
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Send registration data to backend
-    setRegisterModalOpen(false);
-    toast({ title: "Registered!", description: "You have registered for the program." });
+    if (!registerTarget) return;
+    setIsSubmittingReg(true);
+    try {
+      await registerForProgram({
+        programId: registerTarget.id,
+        name: registerForm.name,
+        email: registerForm.email,
+        location: registerForm.location,
+        language: isNepali ? "ne" : "en",
+      });
+      setRegisterModalOpen(false);
+      setRegisterForm({ name: "", email: "", location: "" });
+      toast({
+        title: isNepali ? "दर्ता सफल!" : "Registration Successful!",
+        description: isNepali
+          ? "तपाईंको दर्ता भयो। पुष्टिकरण इमेल पठाइएको छ।"
+          : "You are registered. A confirmation email has been sent to your inbox.",
+      });
+    } catch {
+      toast({
+        title: isNepali ? "त्रुटि" : "Error",
+        description: isNepali
+          ? "दर्ता गर्न असफल भयो। पुनः प्रयास गर्नुहोस्।"
+          : "Registration failed. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmittingReg(false);
+    }
   };
 
   return (
@@ -575,6 +604,11 @@ const Programs = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{isNepali ? "कार्यक्रम दर्ता" : "Program Registration"}</DialogTitle>
+            {registerTarget && (
+              <p className="text-sm text-muted-foreground mt-1">
+                {isNepali ? registerTarget.titleNe || registerTarget.title : registerTarget.title}
+              </p>
+            )}
           </DialogHeader>
           <form onSubmit={handleRegisterSubmit} className="space-y-4">
             <div>
@@ -591,7 +625,11 @@ const Programs = () => {
             </div>
             {/* Dynamic fields for admin can be added here */}
             <DialogFooter>
-              <Button type="submit">{isNepali ? "पेश गर्नुहोस्" : "Submit"}</Button>
+              <Button type="submit" disabled={isSubmittingReg}>
+                {isSubmittingReg
+                  ? (isNepali ? "पेश हुँदैछ…" : "Submitting…")
+                  : (isNepali ? "पेश गर्नुहोस्" : "Submit")}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
