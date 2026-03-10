@@ -314,8 +314,8 @@ const Programs = () => {
       toast({
         title: isNepali ? "दर्ता सफल!" : "Registration Successful!",
         description: isNepali
-          ? "तपाईंको दर्ता भयो। पुष्टिकरण इमेल पठाइएको छ।"
-          : "You are registered. A confirmation email has been sent to your inbox.",
+          ? "तपाईंको दर्ता भयो। पुष्टिकरण इमेल पठाइएको छ। (स्प्याम फोल्डर जाँच्नुहोस्)"
+          : "You are registered. A confirmation email with your QR code has been sent. Check spam if not received.",
       });
     } catch {
       toast({
