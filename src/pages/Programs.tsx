@@ -620,8 +620,10 @@ const Programs = () => {
               <Input id="email" type="email" value={registerForm.email} onChange={e => setRegisterForm({ ...registerForm, email: e.target.value })} required />
             </div>
             <div>
-              <Label htmlFor="location">{isNepali ? "स्थान" : "Location"}</Label>
-              <Input id="location" value={registerForm.location} onChange={e => setRegisterForm({ ...registerForm, location: e.target.value })} required />
+              <Label htmlFor="location">
+                {isNepali ? "स्थान (ऐच्छिक)" : "Location (optional)"}
+              </Label>
+              <Input id="location" value={registerForm.location} onChange={e => setRegisterForm({ ...registerForm, location: e.target.value })} />
             </div>
             {/* Dynamic fields for admin can be added here */}
             <DialogFooter>
