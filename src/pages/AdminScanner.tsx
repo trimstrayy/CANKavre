@@ -422,6 +422,9 @@ const AdminScanner = () => {
                             {lastResult.attendee.organization && (
                               <p><strong>{isNepali ? "संस्था" : "Org"}:</strong> {lastResult.attendee.organization}</p>
                             )}
+                            {lastResult.event && (
+                              <p><strong>{isNepali ? "कार्यक्रम" : "Program"}:</strong> {isNepali ? lastResult.event.title_ne || lastResult.event.title : lastResult.event.title}</p>
+                            )}
                             <p className="font-mono text-xs">{lastResult.attendee.registration_code}</p>
                           </div>
                         )}
