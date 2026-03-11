@@ -310,7 +310,7 @@ function getProgramRegistrationEmailTemplate(program, userName, userEmail, regis
 
         </table>
         <p style="margin: 16px 0 0 0; font-size: 11px; color: #9ca3af; text-align: center;">
-          ${isNepali ? 'यो इमेल तपाईंले कार्यक्रम दर्ता गर्दा पठाइएको हो।' : 'This email was sent because you registered for a program at CAN Kavre.'}
+          ${isNepali ? 'यो इमेल तपाईंले कार्यक्रम दर्ता गर्दा पठाइएको हो। यसको जवाफ नदिनुहोस्।' : 'This email was sent because you registered for a program at CAN Kavre. Please do not reply to this email.'}
         </p>
       </td>
     </tr>
