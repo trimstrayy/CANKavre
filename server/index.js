@@ -326,7 +326,7 @@ app.post('/api/programs/register', async (req, res) => {
 
     // Check for duplicate registration
     db.get('SELECT id FROM program_registrations WHERE programId = ? AND email = ?', [programId, email], async (dupErr, existing) => {
-      if (existing) return res.status(409).json({ error: 'This email is already registered for this program.' });
+      if (existing) return res.status(409).json({ error: `This email is already registered for "${program.title}". Each email can only register once per program.` });
 
       // Generate unique registration code
       const registrationCode = `PRG-${new Date().getFullYear()}-${programId}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
