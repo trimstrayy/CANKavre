@@ -24,6 +24,7 @@ import {
   verifyAttendanceDirect,
   VerifyResponse,
 } from "@/lib/registration";
+import { checkInProgram } from "@/lib/api";
 
 // Audio feedback
 const playBeep = (type: "success" | "error" | "warning") => {
@@ -64,7 +65,7 @@ type ScanResult = VerifyResponse & { timestamp: Date };
 
 const AdminScanner = () => {
   const { isNepali } = useLanguage();
-  const { isAdmin } = useAdmin();
+  const { isAdmin, token } = useAdmin();
   const { toast } = useToast();
 
   const [scanning, setScanning] = useState(false);
@@ -79,11 +80,12 @@ const AdminScanner = () => {
   const cooldownRef = useRef(false);
 
   const extractRegistrationCode = useCallback((qrData: string): string => {
-    // QR data might be a verify URL or the code itself
-    const urlMatch = qrData.match(/verify\/([A-Z]{3}-\d{4}-\d{5}-[A-Z0-9]{4})/);
+    // Match URL-embedded codes: verify/EVT-2026-12345-ABCD or verify/PRG-2026-1-ABCD1234
+    const urlMatch = qrData.match(/verify\/([A-Z]{3}-\d{4}-[\d]+-[A-Z0-9]+)/);
     if (urlMatch) return urlMatch[1];
 
-    const codeMatch = qrData.match(/^[A-Z]{3}-\d{4}-\d{5}-[A-Z0-9]{4}$/);
+    // Match bare codes: EVT-2026-12345-ABCD or PRG-2026-1-ABCD1234
+    const codeMatch = qrData.match(/^[A-Z]{3}-\d{4}-[\d]+-[A-Z0-9]+$/);
     if (codeMatch) return codeMatch[0];
 
     return qrData;
@@ -107,7 +109,22 @@ const AdminScanner = () => {
         try {
           result = await verifyAttendance(code);
         } catch {
-          result = await verifyAttendanceDirect(code);
+          try {
+            result = await verifyAttendanceDirect(code);
+          } catch {
+            // Fallback: local Express server (PRG- program codes)
+            const local = await checkInProgram(token || '', code);
+            result = {
+              status: local.status,
+              message: local.message,
+              attendee: local.attendee
+                ? { name: local.attendee.name, email: local.attendee.email, registration_code: local.attendee.registrationCode }
+                : undefined,
+              event: local.program
+                ? { title: local.program.title, title_ne: local.program.title, date: '', location: '' }
+                : undefined,
+            };
+          }
         }
 
         const scanResult: ScanResult = { ...result, timestamp: new Date() };
