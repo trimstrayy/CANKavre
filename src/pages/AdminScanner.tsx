@@ -488,6 +488,11 @@ const AdminScanner = () => {
                       <Badge variant="secondary" className="ml-1">
                         {scanHistory.length}
                       </Badge>
+                      {scanHistory.filter(s => s.status === 'success').length > 0 && (
+                        <Badge variant="default" className="ml-1 bg-green-600">
+                          {scanHistory.filter(s => s.status === 'success').length} {isNepali ? "सफल" : "in"}
+                        </Badge>
+                      )}
                     </CardTitle>
                     {scanHistory.length > 0 && (
                       <Button
