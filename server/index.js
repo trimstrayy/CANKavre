@@ -387,13 +387,20 @@ app.post('/api/programs/checkin', authMiddleware, requireRole('committee'), (req
       function (updateErr) {
         if (updateErr) return res.status(500).json({ error: 'Failed to mark attendance' });
         db.get('SELECT * FROM programs WHERE id = ?', [reg.programId], (pErr, program) => {
-          res.json({
-            success: true,
-            status: 'success',
-            message: `${reg.name} checked in successfully.`,
-            attendee: { name: reg.name, email: reg.email, registrationCode: reg.registrationCode },
-            program: program ? { id: program.id, title: program.title } : null,
-          });
+          db.get(
+            'SELECT COUNT(*) AS total, SUM(isAttended) AS attended FROM program_registrations WHERE programId = ?',
+            [reg.programId],
+            (cErr, counts) => {
+              res.json({
+                success: true,
+                status: 'success',
+                message: `${reg.name} checked in successfully.`,
+                attendee: { name: reg.name, email: reg.email, registrationCode: reg.registrationCode },
+                program: program ? { id: program.id, title: program.title } : null,
+                counts: counts ? { total: counts.total, attended: counts.attended || 0 } : null,
+              });
+            }
+          );
         });
       }
     );
