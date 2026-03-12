@@ -317,12 +317,16 @@ const Programs = () => {
           ? "तपाईंको दर्ता भयो। पुष्टिकरण इमेल पठाइएको छ। (स्प्याम फोल्डर जाँच्नुहोस्)"
           : "You are registered. A confirmation email with your QR code has been sent. Check spam if not received.",
       });
-    } catch {
+    } catch (err: unknown) {
+      const errObj = err as { error?: string };
+      const isDuplicate = errObj?.error?.includes('already registered');
       toast({
-        title: isNepali ? "त्रुटि" : "Error",
-        description: isNepali
-          ? "दर्ता गर्न असफल भयो। पुनः प्रयास गर्नुहोस्।"
-          : "Registration failed. Please try again.",
+        title: isDuplicate
+          ? (isNepali ? "पहिले नै दर्ता भइसक्यो" : "Already Registered")
+          : (isNepali ? "त्रुटि" : "Error"),
+        description: isDuplicate
+          ? (isNepali ? "यो इमेलले यो कार्यक्रममा पहिले नै दर्ता गरिसकेको छ।" : errObj.error || "This email is already registered for this program.")
+          : (isNepali ? "दर्ता गर्न असफल भयो। पुनः प्रयास गर्नुहोस्।" : "Registration failed. Please try again."),
         variant: "destructive",
       });
     } finally {
