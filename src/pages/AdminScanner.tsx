@@ -114,6 +114,9 @@ const AdminScanner = () => {
           } catch {
             // Fallback: local Express server (PRG- program codes)
             const local = await checkInProgram(token || '', code);
+            const attendanceRate = local.counts
+              ? Math.round((local.counts.attended / local.counts.total) * 100)
+              : 0;
             result = {
               status: local.status,
               message: local.message,
@@ -122,6 +125,9 @@ const AdminScanner = () => {
                 : undefined,
               event: local.program
                 ? { title: local.program.title, title_ne: local.program.title, date: '', location: '' }
+                : undefined,
+              stats: local.counts
+                ? { total_registered: local.counts.total, total_attended: local.counts.attended, attendance_rate: attendanceRate }
                 : undefined,
             };
           }

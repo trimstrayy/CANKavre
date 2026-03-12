@@ -169,6 +169,7 @@ export async function checkInProgram(token: string, registrationCode: string) {
     message: string;
     attendee?: { name: string; email: string; registrationCode: string };
     program?: { id: number; title: string };
+    counts?: { total: number; attended: number };
   }>('/api/programs/checkin', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
