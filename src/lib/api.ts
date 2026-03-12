@@ -176,6 +176,26 @@ export async function checkInProgram(token: string, registrationCode: string) {
   });
 }
 
+/** Get all registrations for a program (committee only). */
+export async function getRegistrations(token: string, programId: number) {
+  return request<{
+    registrations: Array<{
+      id: number;
+      programId: number;
+      name: string;
+      email: string;
+      location: string;
+      registrationCode: string;
+      isAttended: number;
+      attendedAt: string | null;
+      createdAt: string;
+    }>;
+  }>(`/api/programs/registrations/${programId}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
 // ── Generic content CRUD ─────────────────────────────────────────
 
 /** Generic type for all DB content items. */
