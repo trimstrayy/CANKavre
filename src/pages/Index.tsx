@@ -24,6 +24,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import NepalDateTimeWidget from "@/components/NepalDateTimeWidget";
 import {
   Carousel,
   CarouselContent,
@@ -38,13 +39,13 @@ const Index = () => {
   const { t, isNepali } = useLanguage();
 
   const headlines = isNepali ? [
-    { title: "भविष्यको विकासको लागि क्यान अगुवाई", date: "२०८०/०३/१५" },
+    { title: "ई-नेपाल सँगै बनाऔं, हामी CAN.", date: "२०८०/०३/१५" },
     { title: "आईसीटी २०८० मा क्यारियर अवसरहरू", date: "२०८०/०२/२८" },
     { title: "आईसीटी दिवस (मे २, २०२३) - रक्तदान कार्यक्रम", date: "२०८०/०१/१९" },
     { title: "क्यान बागमती प्रदेश कार्यक्रम सहभागिता", date: "२०८०/०१/१०" },
     { title: "क्यालेन्डर विमोचन र नयाँ वर्ष समारोह", date: "२०७९/१०/०१" },
   ] : [
-    { title: "Leading CAN for Future Growth", date: "2080/03/15" },
+    { title: "Let's Build eNepal Together, We CAN.", date: "2080/03/15" },
     { title: "Career Opportunities in ICT 2080", date: "2080/02/28" },
     { title: "ICT DAY (MAY 2, 2023) - Blood Donation Program", date: "2080/01/19" },
     { title: "CAN Bagmati Province Program Participation", date: "2080/01/10" },
@@ -71,7 +72,7 @@ const Index = () => {
     {
       image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1920&q=80",
       title: "10th Executive Committee",
-      subtitle: "Leading CAN Kavre into the Digital Future",
+      subtitle: "Let's Build eNepal Together, We CAN.",
     },
     {
       image: "https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=1920&q=80",
@@ -130,7 +131,7 @@ const Index = () => {
   ];
 
   const stats = [
-    { label: t("yearsActive"), value: "१८+", valueEn: "18+" },
+    { label: t("yearsActive"), value: "२५+", valueEn: "25+" },
     { label: t("itClubs"), value: "१३+", valueEn: "13+" },
     { label: t("members"), value: "१५२+", valueEn: "152+" },
     { label: t("eventsCount"), value: "२००+", valueEn: "200+" },
@@ -150,11 +151,11 @@ const Index = () => {
     "कार्यशाला, सेमिनार र तालिम कार्यक्रमहरू आयोजना गर्ने",
     "डिजिटल पहलहरूको लागि सरकार र निजी क्षेत्रसँग सहकार्य गर्ने"
   ] : [
-    "Promote ICT education and digital literacy across all age groups",
-    "Support IT entrepreneurs and startups in the district",
-    "Establish and coordinate IT clubs in educational institutions",
-    "Organize workshops, seminars, and training programs",
-    "Collaborate with government and private sector for digital initiatives"
+    "Promote ICT development and digital transformation",
+    "Support ICT professionals, students, and entrepreneurs",
+    "Organize training, workshops, exhibitions, and awareness programs",
+    "Encourage innovation, research, and technology-based opportunities",
+    "Strengthen coordination among government, private sector, and educational institutions"
   ];
 
   useEffect(() => {
@@ -508,6 +509,26 @@ const Index = () => {
                 </Button>
               </a>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Live Clock */}
+      <section id="live-clock" className="scroll-mt-28 bg-background py-10 md:py-16">
+        <div className="container mx-auto px-4">
+          <div className="mx-auto max-w-2xl rounded-2xl border border-border bg-card p-6 shadow-card">
+            <div className="mb-4 flex items-center gap-3">
+              <Clock className="w-5 h-5 text-primary" />
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  {isNepali ? "काठमाडौँ समय" : "Kathmandu Time"}
+                </p>
+                <h3 className="font-heading text-xl font-bold text-foreground">
+                  {isNepali ? "स्थानीय घडी" : "Live Clock"}
+                </h3>
+              </div>
+            </div>
+            <NepalDateTimeWidget />
           </div>
         </div>
       </section>

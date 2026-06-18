@@ -1,5 +1,11 @@
 const jwt = require('jsonwebtoken');
 const db = require('./db');
+
+if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'change_this_secret_for_dev')) {
+  console.error('CRITICAL ERROR: JWT_SECRET environment variable is not set or is insecure in production mode!');
+  process.exit(1);
+}
+
 const SECRET = process.env.JWT_SECRET || 'change_this_secret_for_dev';
 
 function authMiddleware(req, res, next) {

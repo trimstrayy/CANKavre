@@ -134,9 +134,9 @@ const initialItClubs: ItClub[] = [
 
 const memberFields: FieldDef[] = [
   { key: "name", label: "Name (EN)", type: "text", required: true, placeholder: "Ram Chandra Nyaupane" },
-  { key: "nameNe", label: "Name (NE)", type: "text", required: true, placeholder: "रामचन्द्र न्यौपाने" },
+  { key: "nameNe", label: "Name (NE) - Optional", type: "text", required: false, placeholder: "Leave blank for auto-translation" },
   { key: "position", label: "Position (EN)", type: "text", required: true, placeholder: "President" },
-  { key: "positionNe", label: "Position (NE)", type: "text", required: true, placeholder: "अध्यक्ष" },
+  { key: "positionNe", label: "Position (NE) - Optional", type: "text", required: false, placeholder: "Leave blank for auto-translation" },
   { key: "contact", label: "Contact", type: "text", placeholder: "+977-98XXXXXXXX" },
   { key: "photo", label: "Photo URL", type: "text", placeholder: "https://..." },
   { key: "sortOrder", label: "Sort Order", type: "number", placeholder: "0" },
@@ -284,7 +284,7 @@ const About = () => {
                 </div>
                 <h2 className="font-heading text-3xl font-bold text-foreground">{t("ourHistory")}</h2>
               </div>
-              <p className="text-muted-foreground leading-relaxed">
+                <p className="text-muted-foreground leading-relaxed">
                 {t("historyText")}
               </p>
             </div>
@@ -313,7 +313,7 @@ const About = () => {
               <Card className="text-center card-hover">
                 <CardContent className="p-6">
                   <History className="w-8 h-8 mx-auto mb-2 text-primary" />
-                  <div className="text-2xl font-heading font-bold text-primary">18+</div>
+                  <div className="text-2xl font-heading font-bold text-primary">25+</div>
                   <div className="text-sm text-muted-foreground">{t("yearsActive")}</div>
                 </CardContent>
               </Card>

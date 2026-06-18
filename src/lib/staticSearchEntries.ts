@@ -5,7 +5,7 @@ const createProgramEntries = (): SearchEntry[] => {
     badge: "Our Initiatives",
     title: "Programs & Initiatives",
     description:
-      "Driving digital transformation across Kavrepalanchok through comprehensive ICT programs that empower communities and bridge the technology gap.",
+      "Promoting ICT development and digital transformation across Kavrepalanchok through training, collaboration, and technology-based opportunities.",
     primaryCta: { label: "View Events" },
     secondaryCta: { label: "Get Involved" },
   };
@@ -653,9 +653,9 @@ const coreEntries: SearchEntry[] = [
     id: "static-home",
     route: "/",
     title: "CAN Kavre Federation",
-    description: "Official site of CAN Federation Kavre Branch",
+    description: "Official site of CAN Federation Kavre",
     content:
-      "CAN Kavre promotes ICT awareness, organizes events, and supports local communities with digital initiatives across Kavrepalanchok.",
+      "CAN Federation Kavre promotes ICT development, digital transformation, and professional collaboration in Kavrepalanchok. Let's Build eNepal Together, We CAN.",
     tags: ["Home", "Overview"],
   },
   {
@@ -664,7 +664,7 @@ const coreEntries: SearchEntry[] = [
     title: "About CAN Kavre",
     description: "Learn about our mission, committees, and leadership",
     content:
-      "Information about CAN Kavre's mission, organizational structure, committees, and the team's ongoing efforts to build e-Nepal.",
+      "Information about CAN Federation Kavre's mission, vision, history, committees, and contact details, based in Banepa-Godamchok, Kavrepalanchok.",
     tags: ["About", "Organization"],
   },
   {

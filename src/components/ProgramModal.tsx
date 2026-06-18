@@ -17,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Card,
@@ -31,11 +30,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 export interface ProgramFormData {
   id?: number;
   title: string;
-  titleNe: string;
+  titleNe?: string;
   description: string;
-  descriptionNe: string;
+  descriptionNe?: string;
   deadline: string; // ISO date string (YYYY-MM-DD)
   category: string;
+  formFields?: ProgramFormField[];
 }
 
 const CATEGORIES = [
@@ -101,7 +101,6 @@ const ProgramModal = ({
   const { isNepali } = useLanguage();
   const isEdit = !!initial?.id;
   const [form, setForm] = useState<ProgramFormData>(initial ?? emptyForm);
-  const [showFormFields, setShowFormFields] = useState(false);
   const [formFields, setFormFields] = useState<ProgramFormField[]>(
     initial?.formFields ?? defaultFormFields
   );
@@ -130,8 +129,25 @@ const ProgramModal = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit({ ...form, formFields }); // Save form fields to DB
+    const normalizedTitle = (form.title || "").trim() || (form.titleNe || "").trim();
+    await onSubmit({
+      ...form,
+      title: normalizedTitle,
+      formFields,
+    }); // Save form fields to DB
   };
+
+  const handleSaveClick = async () => {
+    const normalizedTitle = (form.title || "").trim() || (form.titleNe || "").trim();
+    await onSubmit({
+      ...form,
+      title: normalizedTitle,
+      formFields,
+    });
+  };
+
+  const set = (key: keyof ProgramFormData, value: ProgramFormData[keyof ProgramFormData]) =>
+    setForm((prev) => ({ ...prev, [key]: value }));
 
   const [activeTab, setActiveTab] = useState<'info' | 'form'>('info');
 
@@ -164,7 +180,12 @@ const ProgramModal = ({
                 <CardTitle>{isNepali ? "कार्यक्रम जानकारी" : "Program Information"}</CardTitle>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form id="program-modal-form" onSubmit={handleSubmit} className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    {isNepali
+                      ? "नेपाली फिल्ड खाली छोड्दा प्रणालीले स्वचालित रूपमा अनुवाद गर्नेछ।"
+                      : "Leave Nepali fields blank to auto-translate on save."}
+                  </p>
                   {/* Title EN */}
                   <div className="space-y-1.5">
                     <Label htmlFor="prog-title">
@@ -182,14 +203,13 @@ const ProgramModal = ({
                   {/* Title NE */}
                   <div className="space-y-1.5">
                     <Label htmlFor="prog-title-ne">
-                      Title (NE) <span className="text-destructive">*</span>
+                      Title (NE) ({isNepali ? "ऐच्छिक" : "optional"})
                     </Label>
                     <Input
                       id="prog-title-ne"
-                      value={form.titleNe}
+                      value={form.titleNe ?? ""}
                       onChange={(e) => set("titleNe", e.target.value)}
-                      placeholder="e.g. वेब डेभलपमेन्ट बुटक्याम्प"
-                      required
+                      placeholder={isNepali ? "खाली राख्दा स्वत: अनुवाद हुन्छ" : "Leave blank for auto-translation"}
                     />
                   </div>
 
@@ -207,13 +227,13 @@ const ProgramModal = ({
 
                   {/* Description NE */}
                   <div className="space-y-1.5">
-                    <Label htmlFor="prog-desc-ne">Description (NE)</Label>
+                    <Label htmlFor="prog-desc-ne">Description (NE) ({isNepali ? "ऐच्छिक" : "optional"})</Label>
                     <Textarea
                       id="prog-desc-ne"
                       rows={3}
-                      value={form.descriptionNe}
+                      value={form.descriptionNe ?? ""}
                       onChange={(e) => set("descriptionNe", e.target.value)}
-                      placeholder="कार्यक्रमको संक्षिप्त विवरण…"
+                      placeholder={isNepali ? "खाली राख्दा स्वत: अनुवाद हुन्छ" : "Leave blank for auto-translation"}
                     />
                   </div>
 
@@ -303,7 +323,7 @@ const ProgramModal = ({
           <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={isSaving}>
             {isNepali ? "रद्द गर्नुहोस्" : "Cancel"}
           </Button>
-          <Button type="submit" disabled={isSaving}>
+          <Button type="button" onClick={handleSaveClick} disabled={isSaving}>
             {isSaving
               ? isNepali
                 ? "सेभ हुँदैछ…"

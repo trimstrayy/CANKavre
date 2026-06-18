@@ -892,6 +892,7 @@ CREATE POLICY "program_reg_insert_anyone"
 CREATE POLICY "program_reg_select_own_or_committee"
     ON program_registrations FOR SELECT USING (
         user_id = auth.uid() OR
+        email = (SELECT email FROM profiles WHERE id = auth.uid()) OR
         EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'committee')
     );
 

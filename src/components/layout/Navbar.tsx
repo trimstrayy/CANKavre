@@ -10,16 +10,100 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSearch } from "@/contexts/SearchContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import SearchPanel from "@/components/SearchPanel";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { useAuth } from "@/contexts/AuthContext";
+
+const AdminAccountControls = ({ mobile = false }: { mobile?: boolean }) => {
+  const { user, logout } = useAuth();
+
+  if (!user) {
+    return mobile ? (
+      <Link to="/auth" className="block" onClick={() => setTimeout(() => {}, 0)}>
+        <Button className="w-full bg-primary hover:bg-primary/90">
+          <LogIn className="w-4 h-4 mr-2" />
+          Login
+        </Button>
+      </Link>
+    ) : (
+      <Link to="/auth" className="hidden md:block">
+        <Button className="bg-primary hover:bg-primary/90">
+          <LogIn className="w-4 h-4 mr-2" />
+          Login
+        </Button>
+      </Link>
+    );
+  }
+
+  if (mobile) {
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 px-2 py-1">
+          <User className="w-4 h-4 text-muted-foreground" />
+          <span className="text-sm font-medium truncate">{user.fullName || user.email}</span>
+          <span className="ml-auto rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+            {user.role}
+          </span>
+        </div>
+        {user.role === 'committee' && (
+          <Link to="/admin" className="block" onClick={() => mobile && false}>
+            <Button variant="outline" className="w-full">
+              {"Admin Dashboard"}
+            </Button>
+          </Link>
+        )}
+        <Button
+          variant="destructive"
+          className="w-full"
+          onClick={() => { logout(); window.location.href = '/'; }}
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          Logout
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" className="hidden md:inline-flex gap-2">
+          <User className="w-4 h-4" />
+          <span className="max-w-[120px] truncate text-sm">{user.fullName || user.email}</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem className="text-xs text-muted-foreground" disabled>
+          {user.role === 'committee'
+            ? 'Committee'
+            : user.role === 'subcommittee'
+            ? 'Subcommittee'
+            : 'Member'}
+        </DropdownMenuItem>
+        {user.role === 'committee' && (
+          <DropdownMenuItem asChild>
+            <Link to="/admin">Admin Dashboard</Link>
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem
+          onClick={() => { logout(); window.location.href = '/'; }}
+          className="text-destructive focus:text-destructive"
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          Logout
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const { isVisible: isSearchVisible, query, openSearch, closeSearch, performSearch } = useSearch();
   const { t, isNepali } = useLanguage();
-  const { user, logout } = useAuth();
+  const isAdminHost = typeof window !== 'undefined' && window.location.hostname === 'admin.localhost';
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -79,6 +163,11 @@ const Navbar = () => {
     performSearch(query);
   };
 
+  const scrollToClock = () => {
+    const clockSection = document.getElementById("live-clock");
+    clockSection?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
   const navLinks = [
     { name: t("home"), path: "/" },
     { name: t("aboutUs"), path: "/about" },
@@ -101,7 +190,7 @@ const Navbar = () => {
         { name: t("events"), path: "/events" },
       ]
     },
-    { name: t("eventsGallery"), path: "/events#gallery" },
+    { name: t("calendar"), scrollTarget: "live-clock" },
     { name: t("downloads"), path: "/downloads" },
   ];
 
@@ -173,6 +262,18 @@ const Navbar = () => {
                       ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
+                ) : link.scrollTarget ? (
+                  <button
+                    key={link.name}
+                    type="button"
+                    onClick={scrollToClock}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${location.pathname === "/"
+                      ? "bg-primary/10 text-primary"
+                      : "text-foreground hover:bg-muted"
+                      }`}
+                  >
+                    {link.name}
+                  </button>
                 ) : (
                   <Link
                     key={link.path}
@@ -221,44 +322,7 @@ const Navbar = () => {
                   aria-hidden={!isSearchVisible}
                 />
               </form>
-              {user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="hidden md:inline-flex gap-2">
-                      <User className="w-4 h-4" />
-                      <span className="max-w-[120px] truncate text-sm">{user.fullName || user.email}</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem className="text-xs text-muted-foreground" disabled>
-                      {user.role === 'committee'
-                        ? isNepali ? 'समिति सदस्य' : 'Committee'
-                        : user.role === 'subcommittee'
-                        ? isNepali ? 'उपसमिति' : 'Subcommittee'
-                        : isNepali ? 'सदस्य' : 'Member'}
-                    </DropdownMenuItem>
-                    {user.role === 'committee' && (
-                      <DropdownMenuItem asChild>
-                        <Link to="/admin">{isNepali ? 'एडमिन ड्यासबोर्ड' : 'Admin Dashboard'}</Link>
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem
-                      onClick={() => { logout(); window.location.href = '/'; }}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      {isNepali ? 'लगआउट' : 'Logout'}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <Link to="/auth" className="hidden md:block">
-                  <Button className="bg-primary hover:bg-primary/90">
-                    <LogIn className="w-4 h-4 mr-2" />
-                    {t("login")}
-                  </Button>
-                </Link>
-              )}
+              {isAdminHost ? <AdminAccountControls /> : null}
 
               {/* Mobile Menu Toggle */}
               <button
@@ -335,6 +399,17 @@ const Navbar = () => {
                           ))}
                         </ul>
                       </div>
+                    ) : link.scrollTarget ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsOpen(false);
+                          scrollToClock();
+                        }}
+                        className="block w-full rounded-lg px-3 py-3 text-left font-medium text-foreground hover:bg-muted"
+                      >
+                        {link.name}
+                      </button>
                     ) : (
                       <Link
                         to={link.path}
@@ -353,39 +428,7 @@ const Navbar = () => {
               </ul>
             </nav>
             <div className="mt-6 border-t border-border pt-4">
-              {user ? (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 px-2 py-1">
-                    <User className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm font-medium truncate">{user.fullName || user.email}</span>
-                    <span className="ml-auto rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                      {user.role}
-                    </span>
-                  </div>
-                  {user.role === 'committee' && (
-                    <Link to="/admin" className="block" onClick={() => setIsOpen(false)}>
-                      <Button variant="outline" className="w-full">
-                        {isNepali ? 'एडमिन ड्यासबोर्ड' : 'Admin Dashboard'}
-                      </Button>
-                    </Link>
-                  )}
-                  <Button
-                    variant="destructive"
-                    className="w-full"
-                    onClick={() => { logout(); setIsOpen(false); window.location.href = '/'; }}
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    {isNepali ? 'लगआउट' : 'Logout'}
-                  </Button>
-                </div>
-              ) : (
-                <Link to="/auth" className="block" onClick={() => setIsOpen(false)}>
-                  <Button className="w-full bg-primary hover:bg-primary/90">
-                    <LogIn className="w-4 h-4 mr-2" />
-                    {t("memberLogin")}
-                  </Button>
-                </Link>
-              )}
+              {isAdminHost ? <AdminAccountControls mobile /> : null}
             </div>
           </div>
         </div>

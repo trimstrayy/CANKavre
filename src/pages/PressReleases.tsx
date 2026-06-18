@@ -9,6 +9,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/hooks/use-toast";
 import ContentModal, { FieldDef } from "@/components/ContentModal";
 import { pressReleasesApi, PressReleaseRecord } from "@/lib/api";
+import { fetchPressReleases } from "@/lib/supabaseContent";
 
 interface PressReleaseItem {
   id: number;
@@ -22,74 +23,6 @@ interface PressReleaseItem {
   link: string;
 }
 
-const initialPressReleases: PressReleaseItem[] = [
-  {
-    id: 1,
-    title: "Leading CAN for Future Growth",
-    titleNe: "भविष्यको विकासको लागि क्यान अगुवाई",
-    excerpt: "CAN Federation Kavre outlines its vision for future growth and ICT development in Kavrepalanchok district under the leadership of the 10th Executive Committee.",
-    excerptNe: "क्यान महासंघ काभ्रेले १० औं कार्यसमितिको नेतृत्वमा काभ्रेपलाञ्चोक जिल्लामा भविष्यको विकास र आईसीटी विकासको दृष्टिकोण प्रस्तुत गर्दछ।",
-    date: "2023-06-08",
-    category: "Organization",
-    categoryNe: "संगठन",
-    link: "https://www.cankavre.org.np/?p=681",
-  },
-  {
-    id: 2,
-    title: "Career Opportunities in ICT 2080 Seminar Completed",
-    titleNe: "आईसीटीमा क्यारियर अवसरहरू २०८० सेमिनार सम्पन्न",
-    excerpt: "A grand seminar on Career Opportunities in ICT 2080 was conducted with participation of CAN Federation President Ranjit Kumar Poddar, resource persons, and students from across Kavre district.",
-    excerptNe: "क्यान महासंघका अध्यक्ष रणजित कुमार पोद्दार, स्रोत व्यक्तिहरू र काभ्रे जिल्लाभरका विद्यार्थीहरूको सहभागितामा आईसीटीमा क्यारियर अवसरहरू २०८० विषयमा भव्य सेमिनार सम्पन्न।",
-    date: "2023-06-08",
-    category: "Events",
-    categoryNe: "कार्यक्रमहरू",
-    link: "https://www.cankavre.org.np/?p=676",
-  },
-  {
-    id: 3,
-    title: "ICT Day Blood Donation Program Completed",
-    titleNe: "आईसीटी दिवस रक्तदान कार्यक्रम सम्पन्न",
-    excerpt: "CAN Kavre organized a blood donation program at Banepa Chardawato on the occasion of National ICT Day in collaboration with Nepal Red Cross Society. 34 people donated blood.",
-    excerptNe: "क्यान काभ्रेले राष्ट्रिय सूचना प्रविधि दिवसको उपलक्ष्यमा नेपाल रेडक्रस सोसाईटिको सहकार्यमा बनेपा चारदोबाटोमा रक्तदान कार्यक्रम आयोजना गर्यो। ३४ जनाले रक्तदान गरे।",
-    date: "2023-06-08",
-    category: "Events",
-    categoryNe: "कार्यक्रमहरू",
-    link: "https://www.cankavre.org.np/?p=668",
-  },
-  {
-    id: 4,
-    title: "CAN Kavre Participates in Bagmati Province Program",
-    titleNe: "क्यान काभ्रे बागमती प्रदेश कार्यक्रममा सहभागी",
-    excerpt: "CAN Federation Kavre representatives participated in a program organized by CAN Federation Bagmati Province to discuss ICT development at the provincial level.",
-    excerptNe: "क्यान महासंघ काभ्रेका प्रतिनिधिहरू प्रदेश स्तरमा आईसीटी विकासबारे छलफल गर्न क्यान महासंघ बागमती प्रदेशद्वारा आयोजित कार्यक्रममा सहभागी भए।",
-    date: "2023-06-08",
-    category: "Partnership",
-    categoryNe: "साझेदारी",
-    link: "https://www.cankavre.org.np/?p=664",
-  },
-  {
-    id: 5,
-    title: "New Year 2080 Greetings Exchange & Calendar Launch",
-    titleNe: "नव वर्ष २०८० शुभकामना आदानप्रदान तथा क्यालेन्डर लोकार्पण",
-    excerpt: "CAN Kavre completed the New Year 2080 greetings exchange and calendar launch program at Banepa with District Coordination Committee Chief Deepak Kumar Gautam as chief guest.",
-    excerptNe: "क्यान काभ्रेले बनेपामा जिल्ला समन्वय समितिका प्रमुख दीपक कुमार गौतमको प्रमुख आतिथ्यतामा नव वर्ष २०८० शुभकामना आदानप्रदान तथा क्यालेन्डर लोकार्पण कार्यक्रम सम्पन्न गर्यो।",
-    date: "2023-06-07",
-    category: "Organization",
-    categoryNe: "संगठन",
-    link: "https://www.cankavre.org.np/?p=659",
-  },
-  {
-    id: 6,
-    title: "ICT Business Meet with Entrepreneurs Completed",
-    titleNe: "व्यावसायी सँग आईसीटी बिजनेस मिट सम्पन्न",
-    excerpt: "CAN Kavre organized an ICT Business Meet bringing together 25+ ICT entrepreneurs and business professionals from Banepa to discuss ICT promotion and business networking.",
-    excerptNe: "क्यान काभ्रेले बनेपाका २५ भन्दा बढी आईसीटी उद्यमी र व्यवसायीहरूलाई एकत्रित गरी आईसीटी प्रवर्द्धन र व्यापार नेटवर्किङबारे छलफलको लागि बिजनेस मिट कार्यक्रम आयोजना गर्यो।",
-    date: "2023-06-07",
-    category: "Events",
-    categoryNe: "कार्यक्रमहरू",
-    link: "https://www.cankavre.org.np/?p=565",
-  },
-];
 
 const categories = [
   { en: "All", ne: "सबै" },
@@ -102,12 +35,12 @@ const categories = [
 
 const pressReleaseFields: FieldDef[] = [
   { name: "title", label: "Title (EN)", type: "text" },
-  { name: "titleNe", label: "Title (NE)", type: "text" },
+  { name: "titleNe", label: "Title (NE) - Optional", type: "text", placeholder: "Leave blank for auto-translation" },
   { name: "excerpt", label: "Excerpt (EN)", type: "textarea" },
-  { name: "excerptNe", label: "Excerpt (NE)", type: "textarea" },
+  { name: "excerptNe", label: "Excerpt (NE) - Optional", type: "textarea", placeholder: "Leave blank for auto-translation" },
   { name: "date", label: "Date", type: "date" },
   { name: "category", label: "Category (EN)", type: "text" },
-  { name: "categoryNe", label: "Category (NE)", type: "text" },
+  { name: "categoryNe", label: "Category (NE) - Optional", type: "text", placeholder: "Leave blank for auto-translation" },
   { name: "link", label: "Link URL", type: "text" },
 ];
 
@@ -124,32 +57,45 @@ const PressReleases = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
 
   useEffect(() => {
-    pressReleasesApi.getAll().then(setDbItems).catch(() => {});
+    fetchPressReleases()
+      .then((items) => {
+        setDbItems(
+          items.map((r) => ({
+            id: r.id,
+            title: r.title,
+            titleNe: r.titleNe,
+            excerpt: r.excerpt,
+            excerptNe: r.excerptNe,
+            date: r.date,
+            category: r.category,
+            categoryNe: r.categoryNe,
+            link: r.link,
+          }))
+        );
+      })
+      .catch(() => {});
   }, []);
 
-  const displayItems: PressReleaseItem[] =
-    dbItems.length > 0
-      ? dbItems.map((r) => ({
-          id: r.id,
-          title: r.title,
-          titleNe: r.titleNe,
-          excerpt: r.excerpt,
-          excerptNe: r.excerptNe,
-          date: r.date,
-          category: r.category,
-          categoryNe: r.categoryNe,
-          link: r.link,
-        }))
-      : initialPressReleases;
+  const displayItems: PressReleaseItem[] = dbItems.map((r) => ({
+    id: r.id,
+    title: r.title,
+    titleNe: r.titleNe,
+    excerpt: r.excerpt,
+    excerptNe: r.excerptNe,
+    date: r.date,
+    category: r.category,
+    categoryNe: r.categoryNe,
+    link: r.link,
+  }));
 
   const handlePressSubmit = async (data: Record<string, string>) => {
     try {
       if (editingItem) {
-        const updated = await pressReleasesApi.update(editingItem.id, data, token!);
+        const updated = await pressReleasesApi.update(token!, editingItem.id, data);
         setDbItems((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
         toast({ title: "Press release updated" });
       } else {
-        const created = await pressReleasesApi.create(data, token!);
+        const created = await pressReleasesApi.create(token!, data);
         setDbItems((prev) => [...prev, created]);
         toast({ title: "Press release added" });
       }
@@ -161,7 +107,7 @@ const PressReleases = () => {
   const handlePressDelete = async (id: number) => {
     if (!confirm("Delete this press release?")) return;
     try {
-      await pressReleasesApi.remove(id, token!);
+      await pressReleasesApi.remove(token!, id);
       setDbItems((prev) => prev.filter((r) => r.id !== id));
       toast({ title: "Press release deleted" });
     } catch {

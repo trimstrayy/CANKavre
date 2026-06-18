@@ -8,15 +8,22 @@ const QRCode = require('qrcode');
 const db = require('./db');
 const { authMiddleware, requireRole, SECRET } = require('./auth');
 const { generateVerificationToken, sendVerificationEmail, FRONTEND_URL } = require('./email');
+const { fillNepaliFields } = require('./translation');
 
 const app = express();
-app.use(cors());
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' 
+    ? (process.env.FRONTEND_URL || 'https://cankavre.org.np') 
+    : '*',
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 const PORT = process.env.PORT || 4000;
 const TOKEN_EXPIRY_HOURS = 24;
 
-// ── Ensure program_registrations table has all required columns ──
+// ── Ensure program_registrations & event_registrations tables exist ──
 db.run(`CREATE TABLE IF NOT EXISTS program_registrations (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   programId INTEGER,
@@ -37,15 +44,28 @@ db.run(`CREATE TABLE IF NOT EXISTS program_registrations (
   migrations.forEach(sql => db.run(sql, () => {})); // Errors are safe to ignore (column already exists)
 });
 
+db.run(`CREATE TABLE IF NOT EXISTS event_registrations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  eventId INTEGER,
+  name TEXT,
+  email TEXT,
+  location TEXT,
+  designation TEXT,
+  registrationCode TEXT UNIQUE,
+  isAttended INTEGER DEFAULT 0,
+  attendedAt DATETIME,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+)`);
+
 // Register - creates unverified account and sends verification email
 app.post('/api/register', async (req, res) => {
-  const { fullName, email, password, role, language } = req.body;
+  const { fullName, email, password, language } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
   
   const hashed = await bcrypt.hash(password, 10);
-  const stmt = db.prepare('INSERT INTO users (fullName, email, password, role, emailVerified) VALUES (?, ?, ?, ?, 0)');
+  const stmt = db.prepare('INSERT INTO users (fullName, email, password, role, emailVerified) VALUES (?, ?, ?, \'member\', 0)');
   
-  stmt.run(fullName || null, email, hashed, role || 'member', async function (err) {
+  stmt.run(fullName || null, email, hashed, async function (err) {
     if (err) {
       if (err.message && err.message.includes('UNIQUE')) {
         return res.status(409).json({ error: 'Email already registered' });
@@ -78,7 +98,7 @@ app.post('/api/register', async (req, res) => {
           message: 'Registration successful! Please check your email to verify your account.',
           email: email.replace(/(.{2})(.*)(@.*)/, '$1***$3'),
           // Include verification URL in dev mode (when email not configured)
-          ...(emailResult.mock ? { verificationUrl: emailResult.verificationUrl } : {})
+          ...(emailResult.mock && process.env.NODE_ENV !== 'production' ? { verificationUrl: emailResult.verificationUrl } : {})
         });
       } catch (emailErr) {
         console.error(emailErr);
@@ -160,7 +180,7 @@ app.post('/api/resend-verification', (req, res) => {
         res.json({ 
           success: true, 
           message: 'Verification email resent',
-          ...(emailResult.mock ? { verificationUrl: emailResult.verificationUrl } : {})
+          ...(emailResult.mock && process.env.NODE_ENV !== 'production' ? { verificationUrl: emailResult.verificationUrl } : {})
         });
       } catch (emailErr) {
         res.status(500).json({ error: 'Failed to send verification email' });
@@ -241,8 +261,9 @@ app.get('/api/programs/:id', (req, res) => {
 });
 
 // POST /api/programs — committee only, create program
-app.post('/api/programs', authMiddleware, requireRole('committee'), (req, res) => {
-  const { title, titleNe, description, descriptionNe, deadline, category } = req.body;
+app.post('/api/programs', authMiddleware, requireRole('committee'), async (req, res) => {
+  const translated = await fillNepaliFields(req.body || {});
+  const { title, titleNe, description, descriptionNe, deadline, category } = translated;
   if (!title) return res.status(400).json({ error: 'Title is required' });
 
   const stmt = db.prepare(
@@ -272,16 +293,17 @@ app.post('/api/programs', authMiddleware, requireRole('committee'), (req, res) =
 });
 
 // PUT /api/programs/:id — committee only, update program
-app.put('/api/programs/:id', authMiddleware, requireRole('committee'), (req, res) => {
+app.put('/api/programs/:id', authMiddleware, requireRole('committee'), async (req, res) => {
   const id = req.params.id;
   const fields = ['title', 'titleNe', 'description', 'descriptionNe', 'deadline', 'category'];
+  const translated = await fillNepaliFields(req.body || {});
   const updates = [];
   const values = [];
 
   for (const f of fields) {
-    if (req.body[f] !== undefined) {
+    if (translated[f] !== undefined) {
       updates.push(`${f} = ?`);
-      values.push(req.body[f]);
+      values.push(translated[f]);
     }
   }
 
@@ -366,7 +388,12 @@ app.post('/api/programs/checkin', authMiddleware, requireRole('committee'), (req
   const { registrationCode } = req.body;
   if (!registrationCode) return res.status(400).json({ error: 'Registration code required' });
 
-  db.get('SELECT * FROM program_registrations WHERE registrationCode = ?', [registrationCode], (err, reg) => {
+  const isEvent = registrationCode.startsWith('EVT-');
+  const tableName = isEvent ? 'event_registrations' : 'program_registrations';
+  const idField = isEvent ? 'eventId' : 'programId';
+  const parentTable = isEvent ? 'events' : 'programs';
+
+  db.get(`SELECT * FROM ${tableName} WHERE registrationCode = ?`, [registrationCode], (err, reg) => {
     if (err) return res.status(500).json({ error: 'DB error' });
     if (!reg) {
       return res.json({ success: false, status: 'invalid', message: 'Invalid QR code — registration not found.' });
@@ -382,21 +409,21 @@ app.post('/api/programs/checkin', authMiddleware, requireRole('committee'), (req
 
     const now = new Date().toISOString();
     db.run(
-      'UPDATE program_registrations SET isAttended = 1, attendedAt = ? WHERE registrationCode = ?',
+      `UPDATE ${tableName} SET isAttended = 1, attendedAt = ? WHERE registrationCode = ?`,
       [now, registrationCode],
       function (updateErr) {
         if (updateErr) return res.status(500).json({ error: 'Failed to mark attendance' });
-        db.get('SELECT * FROM programs WHERE id = ?', [reg.programId], (pErr, program) => {
+        db.get(`SELECT * FROM ${parentTable} WHERE id = ?`, [reg[idField]], (pErr, item) => {
           db.get(
-            'SELECT COUNT(*) AS total, SUM(isAttended) AS attended FROM program_registrations WHERE programId = ?',
-            [reg.programId],
+            `SELECT COUNT(*) AS total, SUM(isAttended) AS attended FROM ${tableName} WHERE ${idField} = ?`,
+            [reg[idField]],
             (cErr, counts) => {
               res.json({
                 success: true,
                 status: 'success',
                 message: `${reg.name} checked in successfully.`,
                 attendee: { name: reg.name, email: reg.email, registrationCode: reg.registrationCode },
-                program: program ? { id: program.id, title: program.title } : null,
+                program: item ? { id: item.id, title: item.title } : null,
                 counts: counts ? { total: counts.total, attended: counts.attended || 0 } : null,
               });
             }
@@ -412,6 +439,76 @@ app.get('/api/programs/registrations/:programId', authMiddleware, requireRole('c
   db.all(
     'SELECT * FROM program_registrations WHERE programId = ? ORDER BY createdAt DESC',
     [req.params.programId],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: 'DB error' });
+      res.json({ registrations: rows || [] });
+    }
+  );
+});
+
+// POST /api/events/register — public, user registration for an event
+app.post('/api/events/register', async (req, res) => {
+  const { name, email, location, designation, eventId, language } = req.body;
+  if (!name || !email || !eventId) return res.status(400).json({ error: 'Missing required fields' });
+
+  db.get('SELECT * FROM events WHERE id = ?', [eventId], async (err, eventItem) => {
+    if (err || !eventItem) return res.status(404).json({ error: 'Event not found' });
+
+    // Check for duplicate registration
+    db.get('SELECT id FROM event_registrations WHERE eventId = ? AND email = ?', [eventId, email], async (dupErr, existing) => {
+      if (existing) return res.status(409).json({ error: 'This email is already registered for this event.' });
+
+      // Generate unique registration code
+      const registrationCode = `EVT-${new Date().getFullYear()}-${eventId}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+
+      // Generate QR code as PNG buffer
+      let qrBuffer;
+      try {
+        qrBuffer = await QRCode.toBuffer(registrationCode, { type: 'png', width: 300, margin: 2 });
+      } catch (qrErr) {
+        console.error('QR generation failed:', qrErr.message);
+        return res.status(500).json({ error: 'Failed to generate QR code' });
+      }
+
+      const stmt = db.prepare(
+        'INSERT INTO event_registrations (eventId, name, email, location, designation, registrationCode) VALUES (?, ?, ?, ?, ?, ?)'
+      );
+      stmt.run(eventId, name, email, location || '', designation || '', registrationCode, function (regErr) {
+        if (regErr) {
+          console.error(regErr);
+          return res.status(500).json({ error: 'Failed to register' });
+        }
+        
+        // Update attendees count in events
+        db.run('UPDATE events SET attendees = attendees + 1 WHERE id = ?', [eventId]);
+
+        const { sendProgramRegistrationEmail } = require('./email');
+        const programMapped = {
+          title: eventItem.title,
+          titleNe: eventItem.titleNe,
+          description: eventItem.description,
+          descriptionNe: eventItem.descriptionNe,
+          category: 'Event',
+          deadline: eventItem.date,
+        };
+
+        sendProgramRegistrationEmail(email, programMapped, name, language || 'en', qrBuffer, registrationCode)
+          .then(() => res.json({ success: true, message: 'Registered and confirmation email sent.', registrationCode }))
+          .catch(emailErr => {
+            console.error(emailErr);
+            res.json({ success: true, message: 'Registered, but failed to send confirmation email.', registrationCode });
+          });
+      });
+      stmt.finalize && stmt.finalize();
+    });
+  });
+});
+
+// GET /api/events/registrations/:eventId — committee only, list all event registrants
+app.get('/api/events/registrations/:eventId', authMiddleware, requireRole('committee'), (req, res) => {
+  db.all(
+    'SELECT * FROM event_registrations WHERE eventId = ? ORDER BY createdAt DESC',
+    [req.params.eventId],
     (err, rows) => {
       if (err) return res.status(500).json({ error: 'DB error' });
       res.json({ registrations: rows || [] });
@@ -441,14 +538,15 @@ function crudRoutes(table, writableFields) {
   });
 
   // POST create (committee only)
-  app.post(`/api/${table}`, authMiddleware, requireRole('committee'), (req, res) => {
+  app.post(`/api/${table}`, authMiddleware, requireRole('committee'), async (req, res) => {
+    const translated = await fillNepaliFields(req.body || {});
     const cols = [];
     const vals = [];
     const placeholders = [];
     for (const f of writableFields) {
-      if (req.body[f] !== undefined) {
+      if (translated[f] !== undefined) {
         cols.push(f);
-        vals.push(req.body[f]);
+        vals.push(translated[f]);
         placeholders.push('?');
       }
     }
@@ -464,13 +562,14 @@ function crudRoutes(table, writableFields) {
   });
 
   // PUT update (committee only)
-  app.put(`/api/${table}/:id`, authMiddleware, requireRole('committee'), (req, res) => {
+  app.put(`/api/${table}/:id`, authMiddleware, requireRole('committee'), async (req, res) => {
+    const translated = await fillNepaliFields(req.body || {});
     const updates = [];
     const vals = [];
     for (const f of writableFields) {
-      if (req.body[f] !== undefined) {
+      if (translated[f] !== undefined) {
         updates.push(`${f} = ?`);
-        vals.push(req.body[f]);
+        vals.push(translated[f]);
       }
     }
     if (updates.length === 0) return res.status(400).json({ error: 'No fields to update' });

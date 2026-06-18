@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { 
   Users, 
   Calendar, 
@@ -21,6 +21,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import EditButton from "@/components/EditButton";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { getPrograms, getRegistrations, Program } from "@/lib/api";
+import { useAdmin } from "@/hooks/useAdmin";
 
 interface PendingItem {
   id: number;
@@ -49,7 +60,120 @@ const adminSections = [
 
 const Admin = () => {
   const { toast } = useToast();
+  const { token, isAdmin } = useAdmin();
   const [approvals, setApprovals] = useState(pendingApprovals);
+  const [programs, setPrograms] = useState<Program[]>([]);
+  const [selectedProgramId, setSelectedProgramId] = useState<number | null>(null);
+  const [registrations, setRegistrations] = useState<Array<{
+    id: number;
+    programId: number;
+    name: string;
+    email: string;
+    location: string;
+    registrationCode: string;
+    isAttended: number;
+    attendanceStatus?: string;
+    attendedAt?: string;
+    createdAt?: string;
+  }>>([]);
+  const [isLoadingPrograms, setIsLoadingPrograms] = useState(false);
+  const [isLoadingRegistrations, setIsLoadingRegistrations] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "email" | "createdAt">("createdAt");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  useEffect(() => {
+    setIsLoadingPrograms(true);
+    getPrograms()
+      .then(({ programs }) => {
+        setPrograms(programs);
+        if (!selectedProgramId && programs.length > 0) {
+          setSelectedProgramId(programs[0].id);
+        }
+      })
+      .catch((err: { error?: string }) => {
+        toast({
+          title: "Error",
+          description: err?.error || "Failed to load programs.",
+          variant: "destructive",
+        });
+      })
+      .finally(() => setIsLoadingPrograms(false));
+  }, [selectedProgramId, toast]);
+
+  useEffect(() => {
+    if (!token || !selectedProgramId) return;
+    setIsLoadingRegistrations(true);
+    getRegistrations(token, selectedProgramId)
+      .then(({ registrations }) => setRegistrations(registrations))
+      .catch((err: { error?: string }) => {
+        toast({
+          title: "Error",
+          description: err?.error || "Failed to load registrations.",
+          variant: "destructive",
+        });
+      })
+      .finally(() => setIsLoadingRegistrations(false));
+  }, [token, selectedProgramId, toast]);
+
+  const filteredRegistrations = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    const filtered = registrations.filter((row) => {
+      if (!q) return true;
+      return (
+        row.name.toLowerCase().includes(q) ||
+        row.email.toLowerCase().includes(q) ||
+        row.registrationCode.toLowerCase().includes(q) ||
+        (row.location || "").toLowerCase().includes(q)
+      );
+    });
+
+    const sorted = [...filtered].sort((a, b) => {
+      const dir = sortDir === "asc" ? 1 : -1;
+      if (sortBy === "createdAt") {
+        const av = new Date(a.createdAt || "").getTime();
+        const bv = new Date(b.createdAt || "").getTime();
+        return (av - bv) * dir;
+      }
+      return a[sortBy].localeCompare(b[sortBy]) * dir;
+    });
+
+    return sorted;
+  }, [registrations, searchTerm, sortBy, sortDir]);
+
+  const attendanceSummary = useMemo(() => {
+    const total = registrations.length;
+    const present = registrations.filter((row) => row.isAttended).length;
+    const absent = total - present;
+    const attendanceRate = total > 0 ? Math.round((present / total) * 100) : 0;
+
+    return { total, present, absent, attendanceRate };
+  }, [registrations]);
+
+  const exportCsv = () => {
+    const headers = ["Name", "Email", "Location", "Registration Code", "Status", "Attended At", "Registered At"];
+    const rows = filteredRegistrations.map((row) => [
+      row.name,
+      row.email,
+      row.location || "",
+      row.registrationCode,
+      row.attendanceStatus || (row.isAttended ? "Present" : "Absent"),
+      row.attendedAt || "",
+      row.createdAt || "",
+    ]);
+
+    const csv = [headers, ...rows]
+      .map((cols) => cols.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `program-registrations-${selectedProgramId || "all"}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   const handleApprove = (id: number) => {
     setApprovals(approvals.map(item => 
@@ -71,6 +195,21 @@ const Admin = () => {
       variant: "destructive"
     });
   };
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-background py-12">
+        <div className="container mx-auto px-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Admin Access Required</CardTitle>
+              <CardDescription>Sign in with a committee account to view the admin dashboard.</CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -131,12 +270,15 @@ const Admin = () => {
             <EditButton label="Edit Admin Dashboard" />
           </div>
           <Tabs defaultValue="approvals" className="w-full">
-            <TabsList className="w-full max-w-xl mb-8 grid grid-cols-3 h-auto bg-card shadow-card">
+            <TabsList className="w-full max-w-3xl mb-8 grid grid-cols-4 h-auto bg-card shadow-card">
               <TabsTrigger value="approvals" className="py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 Pending Approvals
               </TabsTrigger>
               <TabsTrigger value="manage" className="py-3 data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground">
                 Manage Content
+              </TabsTrigger>
+              <TabsTrigger value="registrations" className="py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                Attendance Report
               </TabsTrigger>
               <TabsTrigger value="settings" className="py-3 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
                 Settings
@@ -231,6 +373,141 @@ const Admin = () => {
                   </Card>
                 ))}
               </div>
+            </TabsContent>
+
+            {/* Settings */}
+            <TabsContent value="registrations" className="animate-fade-in">
+              <div className="mb-4 flex justify-end">
+                <Button onClick={exportCsv} className="gap-2">
+                  <Download className="w-4 h-4" />
+                  Export CSV
+                </Button>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Attendance Ledger</CardTitle>
+                  <CardDescription>
+                      Every registration is stored in the database. Scanned QR codes become Present; unscanned registrations remain Absent.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid gap-3 md:grid-cols-4">
+                      <Card className="bg-primary/5 border-primary/20">
+                        <CardContent className="p-4 text-center">
+                          <div className="text-2xl font-bold text-primary">{attendanceSummary.total}</div>
+                          <div className="text-sm text-muted-foreground">Registered</div>
+                        </CardContent>
+                      </Card>
+                      <Card className="bg-green-50 border-green-200">
+                        <CardContent className="p-4 text-center">
+                          <div className="text-2xl font-bold text-green-700">{attendanceSummary.present}</div>
+                          <div className="text-sm text-muted-foreground">Present</div>
+                        </CardContent>
+                      </Card>
+                      <Card className="bg-amber-50 border-amber-200">
+                        <CardContent className="p-4 text-center">
+                          <div className="text-2xl font-bold text-amber-700">{attendanceSummary.absent}</div>
+                          <div className="text-sm text-muted-foreground">Absent</div>
+                        </CardContent>
+                      </Card>
+                      <Card className="bg-accent/5 border-accent/20">
+                        <CardContent className="p-4 text-center">
+                          <div className="text-2xl font-bold text-accent">{attendanceSummary.attendanceRate}%</div>
+                          <div className="text-sm text-muted-foreground">Attendance Rate</div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <div>
+                      <p className="mb-1 text-sm font-medium">Program</p>
+                      <select
+                        value={selectedProgramId ?? ""}
+                        onChange={(e) => setSelectedProgramId(Number(e.target.value))}
+                        className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        disabled={isLoadingPrograms || programs.length === 0}
+                      >
+                        {programs.map((p) => (
+                          <option key={p.id} value={p.id}>{p.title}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <p className="mb-1 text-sm font-medium">Search</p>
+                      <Input
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Search name, email, code, location"
+                      />
+                    </div>
+                    <div>
+                      <p className="mb-1 text-sm font-medium">Sort</p>
+                      <div className="flex gap-2">
+                        <select
+                          value={sortBy}
+                          onChange={(e) => setSortBy(e.target.value as "name" | "email" | "createdAt")}
+                          className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        >
+                          <option value="createdAt">Registered Time</option>
+                          <option value="name">Name</option>
+                          <option value="email">Email</option>
+                        </select>
+                        <Button type="button" variant="outline" onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}>
+                          {sortDir === "asc" ? "Asc" : "Desc"}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-md border bg-background">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Location</TableHead>
+                          <TableHead>Registration Code</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Attended At</TableHead>
+                          <TableHead>Registered At</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {isLoadingRegistrations ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center text-muted-foreground">Loading registrations...</TableCell>
+                          </TableRow>
+                        ) : filteredRegistrations.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center text-muted-foreground">No registrations found.</TableCell>
+                          </TableRow>
+                        ) : (
+                          filteredRegistrations.map((row) => (
+                            <TableRow key={row.id}>
+                              <TableCell className="font-medium">{row.name}</TableCell>
+                              <TableCell>{row.email}</TableCell>
+                              <TableCell>{row.location || "-"}</TableCell>
+                              <TableCell>{row.registrationCode}</TableCell>
+                              <TableCell>
+                                <Badge variant={row.isAttended ? "default" : "secondary"} className={row.isAttended ? "bg-green-600" : ""}>
+                                  {row.attendanceStatus || (row.isAttended ? "Present" : "Absent")}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {row.attendedAt ? new Date(row.attendedAt).toLocaleString() : "-"}
+                              </TableCell>
+                              <TableCell>
+                                {row.createdAt ? new Date(row.createdAt).toLocaleString() : "-"}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* Settings */}

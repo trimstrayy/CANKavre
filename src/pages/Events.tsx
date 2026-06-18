@@ -23,6 +23,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/hooks/use-toast";
 import ContentModal, { FieldDef } from "@/components/ContentModal";
 import { eventsApi, EventRecord } from "@/lib/api";
+import { fetchEvents, fetchGalleryImages, type DynamicGalleryImage } from "@/lib/supabaseContent";
 
 interface EventItem {
   id: number;
@@ -46,79 +47,16 @@ interface GalleryImage {
   titleNe: string;
 }
 
-const initialEvents: EventItem[] = [
-  {
-    id: 1,
-    title: "18th AGM & 10th Convention",
-    titleNe: "१८ औं साधारण सभा तथा १० औं अधिवेशन",
-    date: "2022-12-03",
-    time: "10:00 AM",
-    location: "Banepa, Kavrepalanchok",
-    locationNe: "बनेपा, काभ्रेपलाञ्चोक",
-    description: "The 18th Annual General Meeting and 10th Convention of CAN Federation Kavre was successfully completed. New executive committee was elected with Ramchandra Neupane as President.",
-    descriptionNe: "कम्प्युटर एशोसियसन अफ नेपाल (क्यान) महासंघ काभ्रेको १८ औं साधारण सभा तथा १० औं अधिवेशन सम्पन्न। अध्यक्षमा रामचन्द्र न्यौपाने निर्विरोध निर्वाचित।",
-    attendees: 152,
-    status: "completed",
-  },
-  {
-    id: 2,
-    title: "ICT Day 2080 - Blood Donation Program",
-    titleNe: "आईसीटी दिवस २०८० - रक्तदान कार्यक्रम",
-    date: "2023-04-29",
-    time: "9:00 AM",
-    location: "Banepa Chardawato",
-    locationNe: "बनेपा चारदोबाटो",
-    description: "On the occasion of National ICT Day (May 2, 2023), CAN Kavre organized a blood donation program in collaboration with Nepal Red Cross Society Kavrepalanchok Banepa Branch. 34 people donated blood out of 45 attendees.",
-    descriptionNe: "राष्ट्रिय सूचना तथा सञ्चार प्रविधि दिवसको उपलक्ष्यमा क्यान काभ्रे शाखा र नेपाल रेडक्रस सोसाईटि काभ्रेपलाञ्चोक बनेपा शाखाको सहकार्यमा रक्तदान कार्यक्रम सम्पन्न। ४५ जना उपस्थित मध्ये ३४ जनाले रक्तदान गरे।",
-    attendees: 45,
-    status: "completed",
-  },
-  {
-    id: 3,
-    title: "Career Opportunities in ICT 2080",
-    titleNe: "आईसीटीमा क्यारियर अवसरहरू २०८०",
-    date: "2023-06-03",
-    time: "2:00 PM",
-    location: "Banepa, Kavrepalanchok",
-    locationNe: "बनेपा, काभ्रेपलाञ्चोक",
-    description: "A grand seminar on career opportunities in ICT attended by students, teachers, and IT professionals from across Kavre district. Speakers included CAN Federation President Ranjit Kumar Poddar and resource persons Sarita Neupane and Nilmani Neupane.",
-    descriptionNe: "काभ्रे जिल्लाभरका विद्यार्थी, शिक्षक र सूचना प्रविधि व्यवसायीहरूको उपस्थितिमा आईसीटीमा क्यारियर अवसरहरू विषयमा भव्य सेमिनार सम्पन्न। क्यान महासंघका अध्यक्ष रणजित कुमार पोद्दार र स्रोत व्यक्ति सरिता न्यौपाने तथा निलमणी न्यौपानेको सहभागिता।",
-    attendees: 150,
-    status: "completed",
-  },
-  {
-    id: 4,
-    title: "ICT Business Meet with Entrepreneurs",
-    titleNe: "व्यावसायी सँग आईसीटी बिजनेस मिट",
-    date: "2023-06-29",
-    time: "10:00 AM",
-    location: "Banepa, Kavrepalanchok",
-    locationNe: "बनेपा, काभ्रेपलाञ्चोक",
-    description: "CAN Kavre organized an ICT Business Meet bringing together 25+ ICT entrepreneurs and business professionals from Banepa and surrounding areas to discuss ICT promotion, rights, and networking opportunities.",
-    descriptionNe: "क्यान काभ्रेले बनेपा र आसपासका २५ भन्दा बढी आईसीटी उद्यमी र व्यवसायीहरूलाई एकत्रित गरी आईसीटी प्रवर्द्धन, हकहित र नेटवर्किङ अवसरहरूबारे छलफल गरेको बिजनेस मिट कार्यक्रम आयोजना गर्यो।",
-    attendees: 30,
-    status: "completed",
-  },
-];
-
-const initialGalleryImages: GalleryImage[] = [
-  { id: 1, src: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400", title: "ICT Day 2080", titleNe: "आईसीटी दिवस २०८०" },
-  { id: 2, src: "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=400", title: "Workshop Session", titleNe: "कार्यशाला सत्र" },
-  { id: 3, src: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=400", title: "Training Program", titleNe: "तालिम कार्यक्रम" },
-  { id: 4, src: "https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=400", title: "Blood Donation", titleNe: "रक्तदान" },
-  { id: 5, src: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400", title: "Team Meeting", titleNe: "टोली बैठक" },
-  { id: 6, src: "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=400", title: "Conference", titleNe: "सम्मेलन" },
-];
 
 const eventFields: FieldDef[] = [
   { name: "title", label: "Title (EN)", type: "text" },
-  { name: "titleNe", label: "Title (NE)", type: "text" },
+  { name: "titleNe", label: "Title (NE) - Optional", type: "text", placeholder: "Leave blank for auto-translation" },
   { name: "date", label: "Date", type: "date" },
   { name: "time", label: "Time", type: "text" },
   { name: "location", label: "Location (EN)", type: "text" },
-  { name: "locationNe", label: "Location (NE)", type: "text" },
+  { name: "locationNe", label: "Location (NE) - Optional", type: "text", placeholder: "Leave blank for auto-translation" },
   { name: "description", label: "Description (EN)", type: "textarea" },
-  { name: "descriptionNe", label: "Description (NE)", type: "textarea" },
+  { name: "descriptionNe", label: "Description (NE) - Optional", type: "textarea", placeholder: "Leave blank for auto-translation" },
   { name: "attendees", label: "Attendees", type: "number" },
   {
     name: "status",
@@ -141,41 +79,65 @@ const Events = () => {
   const [dbEvents, setDbEvents] = useState<EventRecord[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<EventRecord | null>(null);
-  const [gallery, setGallery] = useState<GalleryImage[]>(initialGalleryImages);
+  const [gallery, setGallery] = useState<GalleryImage[]>([]);
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
   const [galleryEditMode, setGalleryEditMode] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    eventsApi.getAll().then(setDbEvents).catch(() => {});
+    Promise.all([fetchEvents(), fetchGalleryImages()])
+      .then(([events, galleryImages]) => {
+        setDbEvents(
+          events.map((e) => ({
+            id: e.id,
+            title: e.title,
+            titleNe: e.titleNe,
+            date: e.date,
+            time: e.time,
+            location: e.location,
+            locationNe: e.locationNe,
+            description: e.description,
+            descriptionNe: e.descriptionNe,
+            attendees: e.attendees,
+            status: e.status,
+            image: e.image || "",
+          }))
+        );
+        setGallery(
+          galleryImages.map((image: DynamicGalleryImage) => ({
+            id: image.id,
+            src: image.src,
+            title: image.title,
+            titleNe: image.titleNe,
+          }))
+        );
+      })
+      .catch(() => {});
   }, []);
 
-  const displayEvents: EventItem[] =
-    dbEvents.length > 0
-      ? dbEvents.map((e) => ({
-          id: e.id,
-          title: e.title,
-          titleNe: e.titleNe,
-          date: e.date,
-          time: e.time,
-          location: e.location,
-          locationNe: e.locationNe,
-          description: e.description,
-          descriptionNe: e.descriptionNe,
-          attendees: e.attendees,
-          status: e.status as EventItem["status"],
-          image: e.image,
-        }))
-      : initialEvents;
+  const displayEvents: EventItem[] = dbEvents.map((e) => ({
+    id: e.id,
+    title: e.title,
+    titleNe: e.titleNe,
+    date: e.date,
+    time: e.time,
+    location: e.location,
+    locationNe: e.locationNe,
+    description: e.description,
+    descriptionNe: e.descriptionNe,
+    attendees: e.attendees,
+    status: e.status as EventItem["status"],
+    image: e.image,
+  }));
 
   const handleEventSubmit = async (data: Record<string, string>) => {
     try {
       if (editingEvent) {
-        const updated = await eventsApi.update(editingEvent.id, data, token!);
+        const updated = await eventsApi.update(token!, editingEvent.id, data);
         setDbEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
         toast({ title: "Event updated" });
       } else {
-        const created = await eventsApi.create(data, token!);
+        const created = await eventsApi.create(token!, data);
         setDbEvents((prev) => [...prev, created]);
         toast({ title: "Event added" });
       }
@@ -187,7 +149,7 @@ const Events = () => {
   const handleEventDelete = async (id: number) => {
     if (!confirm("Delete this event?")) return;
     try {
-      await eventsApi.remove(id, token!);
+      await eventsApi.remove(token!, id);
       setDbEvents((prev) => prev.filter((e) => e.id !== id));
       toast({ title: "Event deleted" });
     } catch {

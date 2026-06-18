@@ -11,7 +11,9 @@ import {
   MessageSquare,
   User,
   AtSign,
-  CheckCircle
+  CheckCircle,
+  RefreshCw,
+  Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +25,19 @@ const Footer = () => {
   const { toast } = useToast();
   const { t, isNepali } = useLanguage();
   const [email, setEmail] = useState("");
+  const createCaptcha = () => {
+    const left = Math.floor(Math.random() * 8) + 2;
+    const right = Math.floor(Math.random() * 8) + 1;
+    const operator = Math.random() > 0.5 ? "+" : "-";
+    const answer = operator === "+" ? left + right : Math.max(left, right) - Math.min(left, right);
+
+    return {
+      left: operator === "-" ? Math.max(left, right) : left,
+      right: operator === "-" ? Math.min(left, right) : right,
+      operator,
+      answer,
+    };
+  };
   const [feedback, setFeedback] = useState({
     name: "",
     email: "",
@@ -30,7 +45,7 @@ const Footer = () => {
     message: "",
     captcha: ""
   });
-  const [captchaAnswer] = useState({ num1: 5, num2: 3 });
+  const [captchaChallenge, setCaptchaChallenge] = useState(createCaptcha);
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +58,7 @@ const Footer = () => {
 
   const handleFeedbackSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (parseInt(feedback.captcha) !== captchaAnswer.num1 + captchaAnswer.num2) {
+    if (parseInt(feedback.captcha) !== captchaChallenge.answer) {
       toast({
         title: isNepali ? "गलत क्याप्चा" : "Invalid Captcha",
         description: isNepali ? "कृपया गणित समस्या सही समाधान गर्नुहोस्।" : "Please solve the math problem correctly.",
@@ -55,7 +70,13 @@ const Footer = () => {
       title: isNepali ? "प्रतिक्रिया पठाइयो!" : "Feedback Sent!",
       description: isNepali ? "तपाईंको प्रतिक्रियाको लागि धन्यवाद। हामी चाँडै सम्पर्क गर्नेछौं।" : "Thank you for your feedback. We'll get back to you soon.",
     });
+    setCaptchaChallenge(createCaptcha());
     setFeedback({ name: "", email: "", phone: "", message: "", captcha: "" });
+  };
+
+  const refreshCaptcha = () => {
+    setCaptchaChallenge(createCaptcha());
+    setFeedback((current) => ({ ...current, captcha: "" }));
   };
 
   const quickLinks = [
@@ -88,8 +109,8 @@ const Footer = () => {
             </div>
             <p className="text-sm text-background/80 leading-relaxed">
               {isNepali 
-                ? "कम्प्युटर एसोसिएसन अफ नेपाल, काभ्रे शाखा - काभ्रेपलाञ्चोक जिल्लामा आईसीटी विकास र डिजिटल साक्षरता प्रवर्द्धन गर्न समर्पित।"
-                : "Computer Association of Nepal, Kavre Branch - dedicated to promoting ICT development and digital literacy in Kavrepalanchok district."
+                ? "क्यान फेडरेसन काभ्रे काभ्रेपलाञ्चोकमा आईसीटी विकास, डिजिटल रूपान्तरण, र पेशागत सहकार्यलाई प्रवर्द्धन गर्ने जिल्ला स्तरीय संगठन हो।"
+                : "CAN Federation Kavre is a district-level organization promoting ICT development, digital transformation, and professional collaboration in Kavrepalanchok."
               }
             </p>
             <div className="flex gap-3">
@@ -118,15 +139,27 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-start gap-3 text-sm text-background/80">
                 <MapPin className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-                <span>{isNepali ? "बनेपा, काभ्रेपलाञ्चोक, बागमती प्रदेश, नेपाल" : "Banepa, Kavrepalanchok, Bagmati Province, Nepal"}</span>
+                <span>{isNepali ? "सचिवालय कार्यालय, बनेपा-गोदामचोक, काभ्रेपलाञ्चोक, नेपाल" : "Secretariat Office, Banepa-Godamchok, Kavrepalanchok, Nepal"}</span>
               </li>
               <li className="flex items-center gap-3 text-sm text-background/80">
                 <Phone className="w-5 h-5 text-secondary shrink-0" />
-                <span>+977-XXX-XXXXXXX</span>
+                <span>9841315182 / 9851237483</span>
               </li>
               <li className="flex items-center gap-3 text-sm text-background/80">
                 <Mail className="w-5 h-5 text-primary shrink-0" />
                 <span>cankavre@gmail.com</span>
+              </li>
+              <li className="flex items-center gap-3 text-sm text-background/80">
+                <Mail className="w-5 h-5 text-primary shrink-0" />
+                <span>{isNepali ? "आधिकारिक इमेल: info@cankavre.org.np (छिट्टै आउँदैछ)" : "Official Email: info@cankavre.org.np (coming soon)"}</span>
+              </li>
+              <li className="flex items-center gap-3 text-sm text-background/80">
+                <Mail className="w-5 h-5 text-primary shrink-0" />
+                <span>{isNepali ? "समर्थन इमेल: support@cankavre.org.np (छिट्टै आउँदैछ)" : "Support Email: support@cankavre.org.np (coming soon)"}</span>
+              </li>
+              <li className="flex items-center gap-3 text-sm text-background/80">
+                <Clock className="w-5 h-5 text-accent shrink-0" />
+                <span>{isNepali ? "आइतबार - शुक्रबार, १०:०० AM - ५:०० PM" : "Sunday - Friday, 10:00 AM - 5:00 PM"}</span>
               </li>
             </ul>
 
@@ -214,8 +247,20 @@ const Footer = () => {
               />
               <div className="flex items-center gap-2">
                 <span className="text-sm text-background/70">
-                  {isNepali ? `${captchaAnswer.num1} + ${captchaAnswer.num2} = ?` : `${captchaAnswer.num1} + ${captchaAnswer.num2} = ?`}
+                  {isNepali
+                    ? `${captchaChallenge.left} ${captchaChallenge.operator} ${captchaChallenge.right} = ?`
+                    : `${captchaChallenge.left} ${captchaChallenge.operator} ${captchaChallenge.right} = ?`}
                 </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={refreshCaptcha}
+                  className="h-10 w-10 shrink-0 text-background/70 hover:bg-background/10 hover:text-background"
+                  aria-label={isNepali ? "क्याप्चा फेरि बनाउनुहोस्" : "Refresh captcha"}
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
                 <Input
                   type="number"
                   placeholder="?"

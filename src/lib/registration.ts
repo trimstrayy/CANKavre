@@ -1,6 +1,8 @@
 // Registration API helpers — bridges frontend to Supabase Edge Functions
 import { supabase } from './supabase'
 
+const LOCAL_API_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000').replace(/\/$/, '');
+
 // ── Types ──────────────────────────────────────────────────────
 
 export interface RegistrationRequest {
@@ -372,5 +374,128 @@ export async function verifyAttendanceDirect(
       total_attended: totalAttended,
       attendance_rate: totalRegistered > 0 ? Math.round((totalAttended / totalRegistered) * 100) : 0,
     },
+  }
+}
+
+// ── Local Express REST fallbacks ───────────────────────────────
+
+/**
+ * Register for an event via local Express backend.
+ * Used as a final fallback when both Edge Functions and direct
+ * Supabase are unavailable.
+ */
+export async function registerForEventLocal(
+  data: RegistrationRequest
+): Promise<{
+  registration_code: string
+  verify_url: string
+  event_title: string
+  event_date: string
+  event_location: string
+}> {
+  const isEvent = !!data.event_id
+  const endpoint = isEvent ? '/api/events/register' : '/api/programs/register'
+
+  const body = isEvent
+    ? {
+        eventId: data.event_id,
+        name: data.full_name,
+        email: data.email,
+        location: data.organization || '',
+        designation: data.designation || '',
+        language: 'en',
+      }
+    : {
+        programId: data.program_id,
+        name: data.full_name,
+        email: data.email,
+        location: data.organization || '',
+        language: 'en',
+      }
+
+  const response = await fetch(`${LOCAL_API_BASE}${endpoint}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+
+  const result = await response.json().catch(() => ({}))
+
+  if (!response.ok) {
+    const msg = result?.error || 'Registration failed'
+    if (response.status === 409) {
+      throw Object.assign(new Error(msg), {
+        alreadyRegistered: true,
+        registrationCode: result?.registrationCode,
+      })
+    }
+    throw new Error(msg)
+  }
+
+  return {
+    registration_code: result.registrationCode || result.registration_code || '',
+    verify_url: `${window.location.origin}/verify/${result.registrationCode || result.registration_code || ''}`,
+    event_title: '',
+    event_date: '',
+    event_location: '',
+  }
+}
+
+/**
+ * Verify attendance via local Express backend.
+ * Used as a final fallback for QR check-in.
+ */
+export async function verifyAttendanceLocal(
+  registrationCode: string,
+  token: string
+): Promise<VerifyResponse> {
+  const response = await fetch(`${LOCAL_API_BASE}/api/programs/checkin`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ registrationCode }),
+  })
+
+  const result = await response.json().catch(() => ({}))
+
+  if (!response.ok) {
+    return {
+      status: 'error',
+      message: result?.error || 'Verification failed',
+    }
+  }
+
+  return {
+    status: result.status || (result.success ? 'success' : 'error'),
+    message: result.message || '',
+    attendee: result.attendee
+      ? {
+          name: result.attendee.name,
+          email: result.attendee.email,
+          phone: result.attendee.phone,
+          organization: result.attendee.organization,
+          registration_code: result.attendee.registrationCode || registrationCode,
+        }
+      : undefined,
+    event: result.program
+      ? {
+          title: result.program.title,
+          title_ne: result.program.titleNe || result.program.title,
+          date: '',
+          location: '',
+        }
+      : undefined,
+    stats: result.counts
+      ? {
+          total_registered: result.counts.total,
+          total_attended: result.counts.attended,
+          attendance_rate:
+            result.counts.total > 0
+              ? Math.round((result.counts.attended / result.counts.total) * 100)
+              : 0,
+        }
+      : undefined,
   }
 }

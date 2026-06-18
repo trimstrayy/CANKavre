@@ -221,12 +221,13 @@ const Programs = () => {
         });
       }
       setModalOpen(false);
-    } catch {
+    } catch (err: unknown) {
+      const errObj = err as { error?: string };
       toast({
         title: isNepali ? "त्रुटि" : "Error",
-        description: isNepali
+        description: errObj?.error || (isNepali
           ? "सेभ गर्न असफल भयो। पुनः प्रयास गर्नुहोस्।"
-          : "Failed to save. Please try again.",
+          : "Failed to save. Please try again."),
         variant: "destructive",
       });
       // Re-fetch to reconcile on error
@@ -281,8 +282,8 @@ const Programs = () => {
     toast({
       title: isNepali ? "अद्यावधिक भयो" : "Updated",
       description: isNepali
-        ? "स्थानीय परिवर्तन सेभ भयो। (नोट: दुवै EN/NE अपडेट गर्नुहोस्)"
-        : "Local change saved. (Note: update both EN/NE for bilingual sync)",
+        ? "स्थानीय परिवर्तन सेभ भयो। नेपाली अनुवाद स्वचालित रूपमा पूर्ति हुनेछ।"
+        : "Local change saved. Nepali translation will be auto-filled.",
     });
   };
 

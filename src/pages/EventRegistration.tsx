@@ -1,4 +1,4 @@
-import { useState, FormEvent } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   Calendar,
@@ -20,85 +20,10 @@ import { useToast } from "@/hooks/use-toast";
 import {
   registerForEvent,
   registerForEventDirect,
+  registerForEventLocal,
   RegistrationRequest,
 } from "@/lib/registration";
-
-// Hardcoded events matching Events.tsx initialEvents for now
-// In production, these would be fetched from Supabase
-const eventsData: Record<
-  string,
-  {
-    id: number;
-    title: string;
-    titleNe: string;
-    date: string;
-    time: string;
-    location: string;
-    locationNe: string;
-    description: string;
-    descriptionNe: string;
-    status: string;
-    attendees: number;
-  }
-> = {
-  "1": {
-    id: 1,
-    title: "18th AGM & 10th Convention",
-    titleNe: "१८ औं साधारण सभा तथा १० औं अधिवेशन",
-    date: "2022-12-03",
-    time: "10:00 AM",
-    location: "Banepa, Kavrepalanchok",
-    locationNe: "बनेपा, काभ्रेपलाञ्चोक",
-    description:
-      "The 18th Annual General Meeting and 10th Convention of CAN Federation Kavre.",
-    descriptionNe:
-      "कम्प्युटर एशोसियसन अफ नेपाल (क्यान) महासंघ काभ्रेको १८ औं साधारण सभा तथा १० औं अधिवेशन।",
-    status: "completed",
-    attendees: 152,
-  },
-  "2": {
-    id: 2,
-    title: "ICT Day 2080 - Blood Donation Program",
-    titleNe: "आईसीटी दिवस २०८० - रक्तदान कार्यक्रम",
-    date: "2023-04-29",
-    time: "9:00 AM",
-    location: "Banepa Chardawato",
-    locationNe: "बनेपा चारदोबाटो",
-    description:
-      "Blood donation program in collaboration with Nepal Red Cross Society.",
-    descriptionNe:
-      "नेपाल रेडक्रस सोसाईटिको सहकार्यमा रक्तदान कार्यक्रम।",
-    status: "completed",
-    attendees: 45,
-  },
-  "3": {
-    id: 3,
-    title: "Career Opportunities in ICT 2080",
-    titleNe: "आईसीटीमा क्यारियर अवसरहरू २०८०",
-    date: "2023-06-03",
-    time: "2:00 PM",
-    location: "Banepa, Kavrepalanchok",
-    locationNe: "बनेपा, काभ्रेपलाञ्चोक",
-    description: "Grand seminar on career opportunities in ICT.",
-    descriptionNe: "आईसीटीमा क्यारियर अवसरहरू विषयमा भव्य सेमिनार।",
-    status: "upcoming",
-    attendees: 150,
-  },
-  "4": {
-    id: 4,
-    title: "ICT Business Meet with Entrepreneurs",
-    titleNe: "व्यावसायी सँग आईसीटी बिजनेस मिट",
-    date: "2023-06-29",
-    time: "10:00 AM",
-    location: "Banepa, Kavrepalanchok",
-    locationNe: "बनेपा, काभ्रेपलाञ्चोक",
-    description: "ICT Business Meet for entrepreneurs and professionals.",
-    descriptionNe:
-      "उद्यमी र व्यवसायीहरूको लागि आईसीटी बिजनेस मिट।",
-    status: "upcoming",
-    attendees: 30,
-  },
-};
+import { fetchEventById, type DynamicEvent } from "@/lib/supabaseContent";
 
 const EventRegistration = () => {
   const { id } = useParams<{ id: string }>();
@@ -106,7 +31,8 @@ const EventRegistration = () => {
   const { isNepali } = useLanguage();
   const { toast } = useToast();
 
-  const event = id ? eventsData[id] : null;
+  const [event, setEvent] = useState<DynamicEvent | null>(null);
+  const [loadingEvent, setLoadingEvent] = useState(true);
 
   const [form, setForm] = useState({
     full_name: "",
@@ -118,6 +44,32 @@ const EventRegistration = () => {
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const eventId = Number(id);
+
+    if (!id || Number.isNaN(eventId)) {
+      setEvent(null);
+      setLoadingEvent(false);
+      return;
+    }
+
+    setLoadingEvent(true);
+    fetchEventById(eventId)
+      .then((row) => setEvent(row))
+      .finally(() => setLoadingEvent(false));
+  }, [id]);
+
+  if (loadingEvent) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span>{isNepali ? "कार्यक्रम लोड हुँदैछ..." : "Loading event..."}</span>
+        </div>
+      </div>
+    );
+  }
 
   if (!event) {
     return (
@@ -192,15 +144,21 @@ const EventRegistration = () => {
     };
 
     try {
-      // Try Edge Function first, fall back to direct Supabase
+      // Try Edge Function first, fall back to direct Supabase, then local Express
       let regCode: string;
       try {
         const result = await registerForEvent(requestData);
         regCode = result.registration_code;
       } catch {
-        // Fallback to direct registration
-        const result = await registerForEventDirect(requestData);
-        regCode = result.registration_code;
+        try {
+          // Fallback to direct Supabase registration
+          const result = await registerForEventDirect(requestData);
+          regCode = result.registration_code;
+        } catch {
+          // Final fallback to local Express REST API
+          const result = await registerForEventLocal(requestData);
+          regCode = result.registration_code;
+        }
       }
 
       toast({

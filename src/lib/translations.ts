@@ -14,6 +14,7 @@ export interface TranslationKeys {
   noticeBoard: string;
   events: string;
   eventsGallery: string;
+  calendar: string;
   downloads: string;
   login: string;
   memberLogin: string;
@@ -196,6 +197,7 @@ export const translations: Record<Language, TranslationKeys> = {
     noticeBoard: "Notice Board",
     events: "Events",
     eventsGallery: "Events & Gallery",
+    calendar: "Calendar",
     downloads: "Downloads",
     login: "Login",
     memberLogin: "Member Login",
@@ -203,7 +205,7 @@ export const translations: Record<Language, TranslationKeys> = {
     searchPlaceholder: "Search site content...",
     
     // Top Banner
-    letsBuildENepal: "Let's Build e-Nepal",
+    letsBuildENepal: "Let's Build eNepal Together, We CAN.",
     
     // Headlines
     headline: "Headline",
@@ -211,7 +213,7 @@ export const translations: Record<Language, TranslationKeys> = {
     // Hero Section
     canKavre: "CAN KAVRE",
     seventhExecutiveCommittee: "7th Executive Committee",
-    leadingCanKavre: "Leading CAN Kavre into the Digital Future",
+    leadingCanKavre: "Let's Build eNepal Together, We CAN.",
     ictTrainingPrograms: "ICT Training Programs",
     empoweringYouth: "Empowering Youth with Digital Skills",
     communityDevelopment: "Community Development",
@@ -221,7 +223,7 @@ export const translations: Record<Language, TranslationKeys> = {
     // Welcome Banner
     computerAssociationNepal: "Computer Association of Nepal",
     kavreBranch: "Kavre Branch",
-    established: "Established 2065 B.S.",
+    established: "Established 2058 B.S.",
     joinCanKavre: "Join CAN Kavre",
     learnMore: "Learn More",
     
@@ -244,16 +246,16 @@ export const translations: Record<Language, TranslationKeys> = {
     ourFoundation: "Our Foundation",
     missionVisionObjectives: "Mission, Vision & Objectives",
     ourMission: "Our Mission",
-    missionText: "To promote ICT development and digital literacy in Kavrepalanchok district by organizing training programs, workshops, and awareness campaigns. We aim to bridge the digital divide and empower local communities with technological skills for economic and social development.",
+    missionText: "Promote ICT development and digital transformation. Support ICT professionals, students, and entrepreneurs. Organize training, workshops, exhibitions, and awareness programs. Encourage innovation, research, and technology-based opportunities. Strengthen coordination among government, private sector, and educational institutions.",
     ourVision: "Our Vision",
-    visionText: "To establish Kavrepalanchok as a model district for ICT development in Nepal, where every citizen has access to digital resources and the skills to utilize them effectively for personal and community growth.",
+    visionText: "To build a digitally empowered Kavre through innovation, ICT advancement, digital literacy, entrepreneurship, and professional collaboration for a smart Nepal.",
     ourObjectives: "Our Objectives",
-    objectivesText: "Conduct ICT training and digital literacy programs for students, teachers, and community members. Establish and support IT clubs in schools across the district. Organize technology awareness campaigns and seminars. Collaborate with government and private sector for ICT infrastructure development. Promote local ICT entrepreneurs and startups.",
+    objectivesText: "Promote ICT development and digital transformation. Support ICT professionals, students, and entrepreneurs. Organize training, workshops, exhibitions, and awareness programs. Encourage innovation, research, and technology-based opportunities. Strengthen coordination among government, private sector, and educational institutions.",
     
     // Footer
     contactUs: "Contact Us",
     address: "Address",
-    addressText: "Banepa, Kavrepalanchok, Nepal",
+    addressText: "Secretariat Office, Banepa-Godamchok, Kavrepalanchok, Nepal",
     phone: "Phone",
     email: "Email",
     quickLinksFooter: "Quick Links",
@@ -274,7 +276,7 @@ export const translations: Record<Language, TranslationKeys> = {
     // About Page
     aboutCanKavre: "About CAN Kavre",
     ourHistory: "Our History",
-    historyText: "Computer Association of Nepal (CAN) Federation Kavre was established in 2065 B.S. as a district-level organization dedicated to promoting ICT development in Kavrepalanchok. With 152+ members and 18 Annual General Meetings completed, including the landmark 10th Convention in 2079 B.S. that elected the current executive committee, CAN Kavre has been at the forefront of digital literacy, ICT training, and technology awareness in the district. We operate from Banepa, Kavrepalanchok and coordinate with 13 municipalities across the district.",
+    historyText: "Computer Association of Nepal (CAN) Federation Kavre is a district-level ICT organization based at the Secretariat Office in Banepa-Godamchok, Kavrepalanchok. Established in 2058 B.S., it works under the coordination of Bagmati Province and serves the district through ICT awareness, training, and collaboration. The organization’s registration number is currently under renewal, and the PAN/VAT number will be updated soon.",
     currentMainCommittee: "Current Main Committee",
     viewPastCommittees: "View Past Committees",
     hidePastCommittees: "Hide Past Committees",
@@ -376,6 +378,7 @@ export const translations: Record<Language, TranslationKeys> = {
     noticeBoard: "सूचना पाटी",
     events: "कार्यक्रमहरू",
     eventsGallery: "कार्यक्रम र ग्यालेरी",
+    calendar: "क्यालेन्डर",
     downloads: "डाउनलोडहरू",
     login: "लगइन",
     memberLogin: "सदस्य लगइन",
@@ -383,7 +386,7 @@ export const translations: Record<Language, TranslationKeys> = {
     searchPlaceholder: "साइट सामग्री खोज्नुहोस्...",
     
     // Top Banner
-    letsBuildENepal: "ई-नेपाल बनाउँ",
+    letsBuildENepal: "ई-नेपाल सँगै बनाऔं, हामी CAN.",
     
     // Headlines
     headline: "हेडलाइन",
@@ -391,7 +394,7 @@ export const translations: Record<Language, TranslationKeys> = {
     // Hero Section
     canKavre: "क्यान काभ्रे",
     seventhExecutiveCommittee: "७औं कार्यसमिति",
-    leadingCanKavre: "क्यान काभ्रेलाई डिजिटल भविष्यतर्फ अग्रसर गर्दै",
+    leadingCanKavre: "ई-नेपाल सँगै बनाऔं, हामी CAN.",
     ictTrainingPrograms: "आईसीटी तालिम कार्यक्रमहरू",
     empoweringYouth: "युवालाई डिजिटल सीपले सशक्त बनाउँदै",
     communityDevelopment: "सामुदायिक विकास",
@@ -401,7 +404,7 @@ export const translations: Record<Language, TranslationKeys> = {
     // Welcome Banner
     computerAssociationNepal: "कम्प्युटर एसोसिएसन अफ नेपाल",
     kavreBranch: "काभ्रे शाखा",
-    established: "स्थापना २०६५ बि.सं.",
+    established: "स्थापना २०५८ बि.सं.",
     joinCanKavre: "क्यान काभ्रेमा सामेल हुनुहोस्",
     learnMore: "थप जान्नुहोस्",
     
@@ -424,16 +427,16 @@ export const translations: Record<Language, TranslationKeys> = {
     ourFoundation: "हाम्रो आधार",
     missionVisionObjectives: "लक्ष्य, दृष्टिकोण र उद्देश्यहरू",
     ourMission: "हाम्रो लक्ष्य",
-    missionText: "तालिम कार्यक्रमहरू, कार्यशालाहरू र जागरूकता अभियानहरू आयोजना गरेर काभ्रेपलाञ्चोक जिल्लामा आईसीटी विकास र डिजिटल साक्षरता प्रवर्द्धन गर्ने। हामी डिजिटल खाडललाई पूर्ति गर्न र स्थानीय समुदायहरूलाई आर्थिक र सामाजिक विकासको लागि प्राविधिक सीपहरूले सशक्त बनाउने लक्ष्य राख्छौं।",
+    missionText: "आईसीटी विकास र डिजिटल रूपान्तरण प्रवर्द्धन गर्ने। आईसीटी पेशेवर, विद्यार्थी र उद्यमीहरूलाई समर्थन गर्ने। तालिम, कार्यशाला, प्रदर्शनी र जागरूकता कार्यक्रमहरू आयोजना गर्ने। नवप्रवर्तन, अनुसन्धान र प्रविधि-आधारित अवसरहरूलाई प्रोत्साहन गर्ने। सरकारी, निजी क्षेत्र र शैक्षिक संस्थाहरूबीच समन्वय बलियो बनाउने।",
     ourVision: "हाम्रो दृष्टिकोण",
-    visionText: "नेपालमा आईसीटी विकासको लागि काभ्रेपलाञ्चोकलाई मोडेल जिल्लाको रूपमा स्थापित गर्ने, जहाँ प्रत्येक नागरिकसँग डिजिटल स्रोतहरूमा पहुँच र व्यक्तिगत र सामुदायिक विकासको लागि तिनीहरूलाई प्रभावकारी रूपमा प्रयोग गर्ने सीप छ।",
+    visionText: "नवप्रवर्तन, आईसीटी उन्नति, डिजिटल साक्षरता, उद्यमशीलता र पेशागत सहकार्य मार्फत काभ्रेलाई डिजिटल रूपमा सशक्त बनाइ स्मार्ट नेपालको लागि अघि बढाउने।",
     ourObjectives: "हाम्रा उद्देश्यहरू",
-    objectivesText: "विद्यार्थी, शिक्षक र समुदायका सदस्यहरूको लागि आईसीटी तालिम र डिजिटल साक्षरता कार्यक्रमहरू सञ्चालन गर्ने। जिल्लाभरका विद्यालयहरूमा आईटी क्लबहरू स्थापना र समर्थन गर्ने। प्रविधि जागरूकता अभियान र सेमिनारहरू आयोजना गर्ने। आईसीटी पूर्वाधार विकासको लागि सरकारी र निजी क्षेत्रसँग सहकार्य गर्ने। स्थानीय आईसीटी उद्यमी र स्टार्टअपहरूलाई प्रवर्द्धन गर्ने।",
+    objectivesText: "आईसीटी विकास र डिजिटल रूपान्तरण प्रवर्द्धन गर्ने। आईसीटी पेशेवर, विद्यार्थी र उद्यमीहरूलाई समर्थन गर्ने। तालिम, कार्यशाला, प्रदर्शनी र जागरूकता कार्यक्रमहरू आयोजना गर्ने। नवप्रवर्तन, अनुसन्धान र प्रविधि-आधारित अवसरहरूलाई प्रोत्साहन गर्ने। सरकारी, निजी क्षेत्र र शैक्षिक संस्थाहरूबीच समन्वय बलियो बनाउने।",
     
     // Footer
     contactUs: "सम्पर्क गर्नुहोस्",
     address: "ठेगाना",
-    addressText: "बनेपा, काभ्रेपलाञ्चोक, नेपाल",
+    addressText: "सचिवालय कार्यालय, बनेपा-गोदामचोक, काभ्रेपलाञ्चोक, नेपाल",
     phone: "फोन",
     email: "इमेल",
     quickLinksFooter: "द्रुत लिंकहरू",
@@ -454,7 +457,7 @@ export const translations: Record<Language, TranslationKeys> = {
     // About Page
     aboutCanKavre: "क्यान काभ्रेको बारेमा",
     ourHistory: "हाम्रो इतिहास",
-    historyText: "कम्प्युटर एसोसिएसन अफ नेपाल (क्यान) महासंघ काभ्रे शाखा २०६५ बि.सं.मा काभ्रेपलाञ्चोकमा आईसीटी विकास प्रवर्द्धन गर्न समर्पित जिल्ला स्तरीय संगठनको रूपमा स्थापना भएको थियो। १५२+ सदस्यहरू र १८ वटा वार्षिक साधारण सभा सम्पन्न गरेको, २०७९ बि.सं.मा सम्पन्न १० औं अधिवेशनले वर्तमान कार्यसमिति निर्वाचित गरेको छ। हामी बनेपा, काभ्रेपलाञ्चोकबाट सञ्चालन गर्दछौं र जिल्लाभरका १३ पालिकाहरूसँग समन्वय गर्दछौं।",
+    historyText: "कम्प्युटर एसोसिएसन अफ नेपाल (क्यान) महासंघ काभ्रे बागमती प्रदेशको समन्वयमा काभ्रेपलाञ्चोकको सचिवालय कार्यालय, बनेपा-गोदामचोकबाट सञ्चालन हुने जिल्ला स्तरीय आईसीटी संगठन हो। २०५८ बि.सं.मा स्थापना भएको यो संस्था आईसीटी जागरूकता, तालिम र सहकार्य मार्फत जिल्लालाई सेवा पुर्‍याउँदै आएको छ। संगठनको दर्ता नम्बर हाल नवीकरण प्रक्रियामा छ र PAN/VAT नम्बर छिट्टै अद्यावधिक गरिनेछ।",
     currentMainCommittee: "हालको मुख्य समिति",
     viewPastCommittees: "विगतका समितिहरू हेर्नुहोस्",
     hidePastCommittees: "विगतका समितिहरू लुकाउनुहोस्",
