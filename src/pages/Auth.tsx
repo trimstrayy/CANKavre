@@ -98,7 +98,6 @@ const AuthContent = () => {
         fullName: credentials.fullName,
         email: credentials.email,
         password: credentials.password,
-        role: 'member',
         language: isNepali ? 'ne' : 'en',
       });
       

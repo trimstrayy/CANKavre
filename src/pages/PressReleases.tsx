@@ -34,14 +34,14 @@ const categories = [
 ];
 
 const pressReleaseFields: FieldDef[] = [
-  { name: "title", label: "Title (EN)", type: "text" },
-  { name: "titleNe", label: "Title (NE) - Optional", type: "text", placeholder: "Leave blank for auto-translation" },
-  { name: "excerpt", label: "Excerpt (EN)", type: "textarea" },
-  { name: "excerptNe", label: "Excerpt (NE) - Optional", type: "textarea", placeholder: "Leave blank for auto-translation" },
-  { name: "date", label: "Date", type: "date" },
-  { name: "category", label: "Category (EN)", type: "text" },
-  { name: "categoryNe", label: "Category (NE) - Optional", type: "text", placeholder: "Leave blank for auto-translation" },
-  { name: "link", label: "Link URL", type: "text" },
+  { key: "title", label: "Title (EN)", type: "text" },
+  { key: "titleNe", label: "Title (NE) - Optional", type: "text", placeholder: "Leave blank for auto-translation" },
+  { key: "excerpt", label: "Excerpt (EN)", type: "textarea" },
+  { key: "excerptNe", label: "Excerpt (NE) - Optional", type: "textarea", placeholder: "Leave blank for auto-translation" },
+  { key: "date", label: "Date", type: "date" },
+  { key: "category", label: "Category (EN)", type: "text" },
+  { key: "categoryNe", label: "Category (NE) - Optional", type: "text", placeholder: "Leave blank for auto-translation" },
+  { key: "link", label: "Link URL", type: "text" },
 ];
 
 const PressReleases = () => {
@@ -309,7 +309,7 @@ const PressReleases = () => {
         onOpenChange={setModalOpen}
         title={editingItem ? "Edit Press Release" : "Add Press Release"}
         fields={pressReleaseFields}
-        initialData={editingItem ? (editingItem as unknown as Record<string, string>) : undefined}
+        initial={editingItem ? (editingItem as unknown as Record<string, string>) : undefined}
         onSubmit={handlePressSubmit}
       />
     </div>

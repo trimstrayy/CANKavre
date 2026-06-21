@@ -44,13 +44,13 @@ const priorityStyles = {
 } as const;
 
 const noticeFields: FieldDef[] = [
-  { name: "title", label: "Title (EN)", type: "text" },
-  { name: "titleNe", label: "Title (NE) - Optional", type: "text", placeholder: "Leave blank for auto-translation" },
-  { name: "content", label: "Content (EN)", type: "textarea" },
-  { name: "contentNe", label: "Content (NE) - Optional", type: "textarea", placeholder: "Leave blank for auto-translation" },
-  { name: "date", label: "Date", type: "date" },
+  { key: "title", label: "Title (EN)", type: "text" },
+  { key: "titleNe", label: "Title (NE) - Optional", type: "text", placeholder: "Leave blank for auto-translation" },
+  { key: "content", label: "Content (EN)", type: "textarea" },
+  { key: "contentNe", label: "Content (NE) - Optional", type: "textarea", placeholder: "Leave blank for auto-translation" },
+  { key: "date", label: "Date", type: "date" },
   {
-    name: "priority",
+    key: "priority",
     label: "Priority",
     type: "select",
     options: [
@@ -60,7 +60,7 @@ const noticeFields: FieldDef[] = [
     ],
   },
   {
-    name: "type",
+    key: "type",
     label: "Type",
     type: "select",
     options: [
@@ -274,7 +274,7 @@ const Notice = () => {
         onOpenChange={setModalOpen}
         title={editingNotice ? "Edit Notice" : "Add Notice"}
         fields={noticeFields}
-        initialData={editingNotice ? (editingNotice as unknown as Record<string, string>) : undefined}
+        initial={editingNotice ? (editingNotice as unknown as Record<string, string>) : undefined}
         onSubmit={handleNoticeSubmit}
       />
     </div>

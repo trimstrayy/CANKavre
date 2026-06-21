@@ -1,5 +1,8 @@
 // Registration API helpers — bridges frontend to Supabase Edge Functions
 import { supabase } from './supabase'
+// Database types do not yet include event/program registration tables.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sb = supabase as any;
 
 const LOCAL_API_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000').replace(/\/$/, '');
 
@@ -79,6 +82,10 @@ export interface VerifyResponse {
 export async function registerForEvent(
   data: RegistrationRequest
 ): Promise<RegistrationResponse> {
+  if (!supabase) {
+    throw new Error('Supabase is not configured. Cannot invoke Edge Functions.')
+  }
+
   const { data: result, error } = await supabase.functions.invoke(
     'generate-registration',
     {
@@ -116,6 +123,10 @@ export async function registerForEvent(
 export async function verifyAttendance(
   registrationCode: string
 ): Promise<VerifyResponse> {
+  if (!supabase) {
+    throw new Error('Supabase is not configured. Cannot invoke Edge Functions.')
+  }
+
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) {
     throw new Error('Authentication required')
@@ -181,8 +192,7 @@ export async function registerForEventDirect(
   let location = ''
 
   if (isEvent) {
-    const { data: event, error } = await supabase
-      .from('events')
+    const { data: event, error } = await sb.from('events')
       .select('title, date, location, is_registration_open, max_attendees, registered_count, registration_deadline')
       .eq('id', data.event_id!)
       .single()
@@ -199,8 +209,7 @@ export async function registerForEventDirect(
     date = event.date || ''
     location = event.location || ''
   } else {
-    const { data: program, error } = await supabase
-      .from('upcoming_programs')
+    const { data: program, error } = await sb.from('upcoming_programs')
       .select('title, start_date, date, location, is_registration_open, max_participants, current_participants, deadline')
       .eq('id', data.program_id!)
       .single()
@@ -219,8 +228,7 @@ export async function registerForEventDirect(
   }
 
   // Check duplicate
-  const { data: existing } = await supabase
-    .from(tableName)
+  const { data: existing } = await sb.from(tableName)
     .select('registration_code')
     .eq(idField, idValue!)
     .eq('email', data.email)
@@ -257,8 +265,7 @@ export async function registerForEventDirect(
     insertData.registration_source = 'web'
   }
 
-  const { error: insertErr } = await supabase
-    .from(tableName)
+  const { error: insertErr } = await sb.from(tableName)
     .insert(insertData)
 
   if (insertErr) {
@@ -286,8 +293,7 @@ export async function verifyAttendanceDirect(
   let tableName = 'event_registrations'
   let eventInfo: { title: string; title_ne: string; date: string; location: string } | null = null
 
-  const { data: eventReg } = await supabase
-    .from('event_registrations')
+  const { data: eventReg } = await sb.from('event_registrations')
     .select('*, events(id, title, title_ne, date, location)')
     .eq('registration_code', registrationCode)
     .single()
@@ -297,8 +303,7 @@ export async function verifyAttendanceDirect(
     eventInfo = eventReg.events as unknown as typeof eventInfo
   } else {
     tableName = 'program_registrations'
-    const { data: progReg } = await supabase
-      .from('program_registrations')
+    const { data: progReg } = await sb.from('program_registrations')
       .select('*, upcoming_programs(id, title, title_ne, start_date, location)')
       .eq('registration_code', registrationCode)
       .single()
@@ -327,8 +332,7 @@ export async function verifyAttendanceDirect(
   const now = new Date().toISOString()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { error } = await supabase
-    .from(tableName)
+  const { error } = await sb.from(tableName)
     .update({
       is_attended: true,
       checked_in_at: now,
@@ -344,8 +348,7 @@ export async function verifyAttendanceDirect(
   // Get updated counts
   const idField = tableName === 'event_registrations' ? 'event_id' : 'program_id'
   const parentId = reg[idField]
-  const { data: allRegs } = await supabase
-    .from(tableName)
+  const { data: allRegs } = await sb.from(tableName)
     .select('is_attended, status')
     .eq(idField, parentId)
     .neq('status', 'cancelled')

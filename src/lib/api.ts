@@ -15,6 +15,13 @@ export type User = {
   role?: string;
 };
 
+type VerificationResult = {
+  success: boolean;
+  message: string;
+  email?: string;
+  verificationUrl?: string;
+};
+
 function assertSupabase(): any {
   if (!supabase) {
     throw new Error('Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
@@ -94,7 +101,6 @@ export async function registerUser(data: {
   fullName?: string;
   email: string;
   password: string;
-  role?: string;
   language?: string;
 }) {
   if (supabase) {
@@ -104,7 +110,6 @@ export async function registerUser(data: {
       options: {
         data: {
           full_name: data.fullName || '',
-          role: mapProfileRole(data.role),
           language: data.language || 'en',
         },
       },
@@ -119,13 +124,12 @@ export async function registerUser(data: {
     }
   }
 
-  const result = await fetchLocalApi<{ user: User; token: string }>('/api/register', {
+  const result = await fetchLocalApi<VerificationResult>('/api/register', {
     method: 'POST',
     body: JSON.stringify({
       fullName: data.fullName || '',
       email: data.email,
       password: data.password,
-      role: mapProfileRole(data.role),
       language: data.language || 'en',
     }),
   });
@@ -134,6 +138,7 @@ export async function registerUser(data: {
     success: true,
     message: 'Registration successful! Please check your email to verify your account.',
     email: maskEmail(data.email),
+    verificationUrl: result.verificationUrl,
   };
 }
 
@@ -178,7 +183,7 @@ export async function resendVerificationEmail(data: { email: string; language?: 
     }
   }
 
-  await fetchLocalApi<{ success: boolean; message: string }>('/api/resend-verification', {
+  const result = await fetchLocalApi<VerificationResult>('/api/resend-verification', {
     method: 'POST',
     body: JSON.stringify({
       email: data.email,
@@ -189,6 +194,7 @@ export async function resendVerificationEmail(data: { email: string; language?: 
   return {
     success: true,
     message: 'Verification email resent',
+    verificationUrl: result.verificationUrl,
   };
 }
 

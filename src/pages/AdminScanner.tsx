@@ -118,7 +118,7 @@ const AdminScanner = () => {
               ? Math.round((local.counts.attended / local.counts.total) * 100)
               : 0;
             result = {
-              status: local.status,
+              status: local.status as VerifyResponse["status"],
               message: local.message,
               attendee: local.attendee
                 ? { name: local.attendee.name, email: local.attendee.email, registration_code: local.attendee.registrationCode }

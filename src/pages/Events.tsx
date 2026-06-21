@@ -49,17 +49,17 @@ interface GalleryImage {
 
 
 const eventFields: FieldDef[] = [
-  { name: "title", label: "Title (EN)", type: "text" },
-  { name: "titleNe", label: "Title (NE) - Optional", type: "text", placeholder: "Leave blank for auto-translation" },
-  { name: "date", label: "Date", type: "date" },
-  { name: "time", label: "Time", type: "text" },
-  { name: "location", label: "Location (EN)", type: "text" },
-  { name: "locationNe", label: "Location (NE) - Optional", type: "text", placeholder: "Leave blank for auto-translation" },
-  { name: "description", label: "Description (EN)", type: "textarea" },
-  { name: "descriptionNe", label: "Description (NE) - Optional", type: "textarea", placeholder: "Leave blank for auto-translation" },
-  { name: "attendees", label: "Attendees", type: "number" },
+  { key: "title", label: "Title (EN)", type: "text" },
+  { key: "titleNe", label: "Title (NE) - Optional", type: "text", placeholder: "Leave blank for auto-translation" },
+  { key: "date", label: "Date", type: "date" },
+  { key: "time", label: "Time", type: "text" },
+  { key: "location", label: "Location (EN)", type: "text" },
+  { key: "locationNe", label: "Location (NE) - Optional", type: "text", placeholder: "Leave blank for auto-translation" },
+  { key: "description", label: "Description (EN)", type: "textarea" },
+  { key: "descriptionNe", label: "Description (NE) - Optional", type: "textarea", placeholder: "Leave blank for auto-translation" },
+  { key: "attendees", label: "Attendees", type: "number" },
   {
-    name: "status",
+    key: "status",
     label: "Status",
     type: "select",
     options: [
@@ -68,7 +68,7 @@ const eventFields: FieldDef[] = [
       { value: "completed", label: "Completed" },
     ],
   },
-  { name: "image", label: "Image URL", type: "text" },
+  { key: "image", label: "Image URL", type: "text" },
 ];
 
 const Events = () => {
@@ -448,7 +448,7 @@ const Events = () => {
         onOpenChange={setModalOpen}
         title={editingEvent ? "Edit Event" : "Add Event"}
         fields={eventFields}
-        initialData={editingEvent ? (editingEvent as unknown as Record<string, string>) : undefined}
+        initial={editingEvent ? (editingEvent as unknown as Record<string, string>) : undefined}
         onSubmit={handleEventSubmit}
       />
     </div>

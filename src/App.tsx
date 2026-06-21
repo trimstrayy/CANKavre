@@ -22,6 +22,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import EventRegistration from "./pages/EventRegistration";
 import RegistrationSuccess from "./pages/RegistrationSuccess";
 import AdminScanner from "./pages/AdminScanner";
+import VerifyTicket from "./pages/VerifyTicket";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,6 +56,7 @@ const App = ({ isAdminHost = false }: Props) => {
                           <Route path="/events" element={<Events />} />
                           <Route path="/events/:id/register" element={<EventRegistration />} />
                           <Route path="/events/:id/register/success" element={<RegistrationSuccess />} />
+                          <Route path="/verify/:code" element={<VerifyTicket />} />
                           <Route path="/downloads" element={<Downloads />} />
                           <Route path="/press-releases" element={<PressReleases />} />
                           <Route path="/notice" element={<Notice />} />
@@ -90,6 +92,7 @@ const App = ({ isAdminHost = false }: Props) => {
                         <Route path="/events" element={<Events />} />
                         <Route path="/events/:id/register" element={<EventRegistration />} />
                         <Route path="/events/:id/register/success" element={<RegistrationSuccess />} />
+                        <Route path="/verify/:code" element={<VerifyTicket />} />
                         <Route path="/downloads" element={<Downloads />} />
                         <Route path="/press-releases" element={<PressReleases />} />
                         <Route path="/notice" element={<Notice />} />

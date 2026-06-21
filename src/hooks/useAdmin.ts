@@ -1,13 +1,14 @@
-import { useAuth } from "@/contexts/AuthContext";
+import { useOptionalAuth } from "@/contexts/AuthContext";
+import { isAdminHost } from "@/lib/adminHost";
 
 /**
  * Returns `true` when the logged-in user has role === "committee".
  * When not on the admin host, returns a safe stub so public site has no auth UI.
  */
 export function useAdmin() {
-  const isAdminHost = typeof window !== 'undefined' && 
-    (window.location.hostname === 'admin.localhost' || window.location.hostname.startsWith('admin.'));
-  if (!isAdminHost) {
+  const auth = useOptionalAuth();
+
+  if (!isAdminHost() || !auth) {
     return {
       isAdmin: false,
       user: null,
@@ -18,7 +19,7 @@ export function useAdmin() {
     } as const;
   }
 
-  const { user, token, isLoading, login, logout } = useAuth();
+  const { user, token, isLoading, login, logout } = auth;
   const isAdmin = user?.role === "committee";
 
   return { isAdmin, user, token, isLoading, login, logout };

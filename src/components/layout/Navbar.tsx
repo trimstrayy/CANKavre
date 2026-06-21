@@ -13,6 +13,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import SearchPanel from "@/components/SearchPanel";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { isAdminHost } from "@/lib/adminHost";
 
 const AdminAccountControls = ({ mobile = false }: { mobile?: boolean }) => {
   const { user, logout } = useAuth();
@@ -103,7 +104,7 @@ const Navbar = () => {
   const location = useLocation();
   const { isVisible: isSearchVisible, query, openSearch, closeSearch, performSearch } = useSearch();
   const { t, isNepali } = useLanguage();
-  const isAdminHost = typeof window !== 'undefined' && window.location.hostname === 'admin.localhost';
+  const isAdminHostname = isAdminHost();
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -322,7 +323,7 @@ const Navbar = () => {
                   aria-hidden={!isSearchVisible}
                 />
               </form>
-              {isAdminHost ? <AdminAccountControls /> : null}
+              {isAdminHostname ? <AdminAccountControls /> : null}
 
               {/* Mobile Menu Toggle */}
               <button
@@ -428,7 +429,7 @@ const Navbar = () => {
               </ul>
             </nav>
             <div className="mt-6 border-t border-border pt-4">
-              {isAdminHost ? <AdminAccountControls mobile /> : null}
+              {isAdminHostname ? <AdminAccountControls mobile /> : null}
             </div>
           </div>
         </div>

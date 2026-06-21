@@ -66,7 +66,7 @@ BEGIN
         NEW.id,
         COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
         NEW.email,
-        COALESCE(NEW.raw_user_meta_data->>'role', 'member')
+        'member'
     );
     RETURN NEW;
 END;
